@@ -1,0 +1,40 @@
+Ver como que a árvore é armazenada em arquivos binários
+    https://www.youtube.com/watch?v=aZjYr87r1b8
+
+
+
+
+
+Implementar arvore B+ em memória secundária:
+    Os dados só estão presente nas folhas.
+
+
+    Ações:
+        -Inserção de atletas
+            -Feita a lógica inicial XX (inserindo chaves string)
+            A fazer**:
+                -Quando deixar de utilizar algum endereço, sobrescrever o registro no arquivo de forma que indique que ele está disponível
+                -Ao realizar divisão, ao invés de criar registros no final do arquivo, procurar o primeiro endereço disponível no arquivo.
+                -Adicionar mais dados äs folhas (arquivos separados para cada atleta com as informaçoes deles presentes em tennis_players)
+        -Busca simples de atletas (por chave)
+        -Remoção de atletas
+            -Precisa indicar que o endereço do atleta removido no arquivo binário está disponível para futuras inserções
+
+    -Cada ação deve atualizar as respectivas tabelas hash que devem ser modificadas.
+        (Ex: se remover um atleta da espanha, na entrada da espanha na tabela de nacionalidade deve ser removido o atleta)
+
+Implementar tabelas Hash (EM MEMÓRIA SECUNDÁRIA) para diferentes categorias de atleta:
+    -Nacionalidade
+        -Chave: País que representa
+    -campeões
+        -Chave: campeonato(categoria)
+        (Ex: chave "grand slams" deve apontar para uma lista de atletas que já venceram uma grandslam)
+        Talvez seja interessante uma tabela para vencedores de certas edições de cada campeonato
+    -Idade
+        -Chave; idade do jogador
+    -
+    -etc
+
+
+
+

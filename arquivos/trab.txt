@@ -1,0 +1,79 @@
+Trabalho Computacional de Estruturas de Dados e Seus Algoritmos
+
+Considere que você seja contratado pela ATP (Associação de Tenistas Profissionais) para gerar algumas informações relacionadas ao Tênis
+masculino profissional na Era Aberta, isto é, a partir de 1968. Seu software deve ler um arquivo de campeões de grand slams, ATP Finals, 
+de Jogos Olímpicos e de ATP 1000, a partir de 1990, e um arquivo de jogadores nascidos a partir de 1960, gerar uma única árvore B ou B+ 
+em memória secundária, COM UM ÚNICO ARQUIVO BINÁRIO DE ÍNDICE, e fornecer algumas informações, usando algum tipo de menu. 
+CADA FOLHA DEVE SER APRESENTADA EM UM ARQUIVO BINÁRIO DISTINTO, COMO OCORRE EM QUALQUER SISTEMA GERENCIADOR DE BANCO DE DADOS QUE USA B OU B+ 
+PARA ARMAZENAR AS INFORMAÇÕES. 
+
+O arquivo de campeões é organizado da seguinte maneira, com informações separadas por “\”: 
+    (a) primeira informação é o ano; 
+
+    (b) os quatro próximos dados são os sobrenomes dos jogadores  vencedores dos grand slams, que fornecem 2000 pontos cada,
+        no respectivo ano (Australian Open, Roland Garros, Wimbledon e US Open);
+
+    (c) as quinta e sexta informações indicam os sobrenomes dos jogadores ganharam o ATP Finals e as Olimpíadas; e
+
+    (d) os nove últimos sobrenomes dos jogadores venceram os torneios ATP 1000, que somam 1000 pontos cada um para cálculo do ranking.
+    Toda vez que o torneio não é realizado, a informação que aparece é “-”. 
+
+Já o arquivo de tenistas é composto pelo:
+    (1) nome do jogador,
+    (2) seu ano de nascimento (de 1960 em diante) e morte,
+    (3) sua nacionalidade,
+    (4) seu melhor ranking, menor ou igual a 25,
+        e o ano em que ele obteve essa classificação.
+        (4a) Se o jogador nunca obteve o ranking menor ou igual a 25, o valor dessa informação é “-” (o ano também).
+        (4b) Se o jogador foi o primeiro do ranking, o número de semanas em que ele esteve no topo aparece entre parênteses.
+    (5) Por questões de simplificação,  considere que um jogador com 39 anos ou mais está aposentado. Como no arquivo de campeões,
+    (6) essas informações também estão separadas por “\”.
+
+Responda as seguintes questões:
+→ (1)  Quantos jogadores aposentados possuem títulos?
+  (1b) E quantos ativos possuem títulos?
+  Informe-os separadamente em ordem decrescente do número de títulos.
+  Os títulos de grand slams devem ser apresentados primeiro, seguido dos de ATP 1000, ATP Finals e Olimpíadas.
+  A ordem dos torneios deve ser respeitada:
+    os grand slams e os ATP 1000 aparecem em ordem no arquivo de entrada; e
+    O ATP Finals é o *último torneio do ano* e só participam os *OITO* melhores da temporada.
+
+→ se existem jogadores que nasceram no mesmo ano que seu compatriota (que possui um ranking) ganhou algum grand slam?
+
+→ se ninguém tivesse se aposentado ainda, qual seria a pontuação acumulada de cada um dos jogadores, em ordem decrescente?
+
+→ indique o ranking (até 25) por ano, de acordo com a pontuação obtida em cada ano.
+
+→ se existe algum jogador que ganhou todos os grand slams no mesmo ano? Se sim, retornar o(s) nome(s) do(s) jogador(es) e o(s) ano(s).
+
+→ se existe algum jogador que “furou” o ranking, isto é, ganhou algum torneio, mas não estava no ranking (até 25) para:
+	(a) grand slams;
+	(b) ATP 1000;
+	(c) ATP Finals; e
+	(d) Olimpíadas.
+
+→ retirar todos os jogadores em atividade ou não de um determinado país.
+
+→ indique os OITO melhores jogadores do ano, que, a princípio, participaram de cada ATP Finals, a partir de 1991,
+de acordo com a pontuação obtida no ano corrente.
+    Se os jogadores tiverem as mesmas pontuações, os grand slams devem ser considerados primeiro,
+    
+    depois os ATP 1000. Se ainda ocorrerem empates, considere a pontuação do ano anterior.
+    
+    Em 1990, é sabido que os jogadores que disputaram o ATP Finals foram:
+      Stefan Edberg, André Agassi, Pete Sampras, Emílio Sanchez, Boris Becker, Ivan Lendl, Andrés Goméz e Thomas Muster.
+
+→ retornar todos os vencedores, em ordem decrescente, por torneio. Se ocorrem empates, ordene-os por nome em ordem crescente. 
+
+Algumas operações devem ser realizadas nessa estrutura:
+    (a) inserir jogadores,
+    (b) retirar jogadores,
+    (c) buscar jogador em atividade pelo nome,
+    (d) buscar todos os jogadores em atividade por país,
+    (e) a impressão da árvore B (ou B+),
+    (f) dentre outras que vocês acharem necessárias.
+
+Restrições:
+(1) Grupo de 2 a 3 componentes;
+(2) Data de entrega: 07/07 às 23:59h, pelo e-mail rosseti@ic.uff.br; e
+(3) Datas de apresentação: dias 9, 10 e 11 de julho, conforme marcado posteriormente.

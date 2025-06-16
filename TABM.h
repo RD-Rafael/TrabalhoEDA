@@ -47,7 +47,6 @@ void TABM_print_no(TABM* no){
 int TABM_ppl(FILE* fp){
     // fseek(fp, 0L, SEEK_END);
     // return ftell(fp);
-    fseek(fp, sizeof(int), SEEK_SET);
     TABM* no = (TABM*) malloc(sizeof(TABM));
     no->folha = 0;
     int pos = ftell(fp);
@@ -180,21 +179,6 @@ TAtleta* buscaAtletaNFolha(char* nomeFolha, int n){ // retorna o atleta com indi
 int insere_atleta_folha(char* nomeFolha, TAtleta* atleta){
     int posChave = pos_novo_no_folha(nomeFolha, atleta->nome);
 
-    if(posChave == 0){
-        int nchaves = nchaves_em_folha(nomeFolha);
-        inicializar_folha(atleta->nome);
-        FILE* faux = fopen(atleta->nome, "rb+");
-        fwrite(&nchaves, sizeof(int), 1, faux);
-        for(int i = 0; i < nchaves; i++){
-            TAtleta* aux = buscaAtletaNFolha(nomeFolha, i);
-            fwrite(aux, sizeof(TAtleta), 1, faux);
-            liberaAtleta(aux);
-        }
-        if(strcmp(nomeFolha, atleta->nome) != 0 )remove(nomeFolha);
-        strcpy(nomeFolha, atleta->nome);
-        fclose(faux);
-    }
-
 
     FILE* fp = fopen(nomeFolha, "rb+");
     if(!fp){
@@ -241,66 +225,184 @@ int insere_atleta_folha(char* nomeFolha, TAtleta* atleta){
 
 
 
+
 int folha_cheia(char* nomeFolha){
     if(nchaves_em_folha(nomeFolha) == 2*T-1) return 1;
     else return 0;
 }
 
-
-
-
-
 void removeAtletaFolha(char* nomeFolha, char* nomeAtleta){
     //função assume que atleta existe na folha
-    
-    TAtleta atleta;
+    FILE* fp = fopen(nomeFolha, "rb+");
     int nchaves;
-    int k = nchaves;
-    FILE* fp = fopen(nomeFolha, "rb");
-    if(!fp){
-        printf("Erro ao abrir arquivo folha\n");
+    fread(&nchaves, sizeof(int), 1, fp);
+    if(nchaves == 0) {
+        printf("Tentando remover atleta em folha vazia");
         exit(1);
     }
-    fread(&nchaves, sizeof(int), 1, fp);
-    if(nchaves == 0) return;
-    int posAtleta = ftell(fp);
 
-    for(int i = 0; i < nchaves; i++){
-        posAtleta = ftell(fp);
-        k--;
-        fread(&atleta, sizeof(TAtleta), 1, fp);
-        if(strcmp(atleta.nome, nomeAtleta) == 0){
-            break;
-        }
+    TAtleta* atleta = (TAtleta*) malloc(sizeof(TAtleta));
+    int i;
+    for(i = 0; i < nchaves; i++){
+        fread(atleta, sizeof(TAtleta), 1, fp);
+        if(strcmp(atleta->nome, nomeAtleta) == 0) break;
     }
-    //encontrou o atleta e k é igual a quantidade de atletas que devem ser movidos para trás
-    TAtleta** atletasAMover = (TAtleta**) malloc(sizeof(TAtleta*)*k);
+    int k = nchaves - i - 1;
+    TAtleta** atletas = (TAtleta**) malloc(sizeof(TAtleta*)*k);
     for(int i = 0; i < k; i++){
-        fread(&atleta, sizeof(TAtleta), 1, fp);
-        atletasAMover[i] = novoAtleta(
-            atleta.nome,
-            atleta.anoNascimento,
-            atleta.anoMorte,
-            atleta.nacionalidade,
-            atleta.rank,
-            atleta.anoMelhorRank
+        fread(atleta, sizeof(TAtleta), 1, fp);
+        atletas[i] = novoAtleta(
+            atleta->nome,
+            atleta->anoNascimento,
+            atleta->anoMorte,
+            atleta->nacionalidade,
+            atleta->rank,
+            atleta->anoMelhorRank
         );
     }
-    fseek(fp, posAtleta,SEEK_SET);
-    for(int i = 0; i < k; i++){
-        fwrite(atletasAMover[i], sizeof(TAtleta), 1, fp);
+    fseek(fp, sizeof(int) + i*sizeof(TAtleta), SEEK_SET);
+    for(int l = 0; l < k; l++){
+        fwrite(atletas[l], sizeof(TAtleta), 1, fp);
     }
 
-
-    for(int i = 0; i < k; i++) liberaAtleta(atletasAMover[i]);
-    if(atletasAMover) free(atletasAMover);
 
     fseek(fp, 0L, SEEK_SET);
     nchaves--;
     fwrite(&nchaves, sizeof(int), 1, fp);
 
+    for(int l = 0; l < k; l++) liberaAtleta(atletas[l]);
+    if(atletas) free(atletas);
+    liberaAtleta(atleta);
     fclose(fp);
 }
+
+
+void divideFolha(char * nomeFolha){
+    TAtleta* atletaMediano = buscaAtletaNFolha(nomeFolha, T-1);
+    inicializar_folha(atletaMediano->nome);
+    for(int i = 0; i < T; i++){
+        TAtleta* atletaAMover = buscaAtletaNFolha(nomeFolha, T-1);
+        insere_atleta_folha(atletaMediano->nome, atletaAMover);
+        removeAtletaFolha(nomeFolha, atletaAMover->nome);
+        liberaAtleta(atletaAMover);
+    }
+    liberaAtleta(atletaMediano);
+}
+
+
+void TABM_insere(char* nome_indice, TAtleta* atleta){
+    FILE* fp = fopen(nome_indice, "rb+");
+    if(!fp){
+        printf("Erro ao abrir o arquivo indice\n");
+        exit(1);
+    }
+    TABM raiz;
+    if(fread(&raiz, sizeof(TABM), 1, fp) == 0){
+        //primeiro atleta a ser inserido na arvore
+        inicializar_folha(atleta->nome);
+        strcpy(raiz.chaves[0], atleta->nome);
+        raiz.nchaves = 1;
+        raiz.folha = 1;
+        raiz.prox = 0;
+        for(int i = 0; i < 2*T; i++) raiz.filhos[i] = -1;
+        fwrite(&raiz, sizeof(TABM), 1, fp);
+        insere_atleta_folha(atleta->nome, atleta);
+        fclose(fp);
+        return;
+    }
+
+    if(raiz.folha == 1){
+        //raiz é folha, ver se está completa
+        if(raiz.nchaves == 2*T-1){
+            //é necessário dividir a folha em dois, raiz vira nó interno
+            TABM esq, dir;
+            esq.folha = 1;
+            esq.nchaves = T-1;
+            dir.folha = 1;
+            dir.nchaves = T;
+            raiz.folha = 0;
+            raiz.nchaves = 1;
+
+            strcpy(esq.chaves[0], raiz.chaves[0]);
+            TAtleta* atletaMediano = buscaAtletaNFolha(raiz.chaves[0], T-1);
+            strcpy(dir.chaves[0], atletaMediano->nome);
+            divideFolha(raiz.chaves[0]);
+
+            strcpy(raiz.chaves[0], atletaMediano->nome);
+
+            int ppl = TABM_ppl(fp);
+            fseek(fp, ppl, SEEK_SET);
+            raiz.filhos[0] = ftell(fp);
+            fwrite(&esq, sizeof(TABM), 1, fp);
+
+            ppl = TABM_ppl(fp);
+            fseek(fp, ppl, SEEK_SET);
+            raiz.filhos[1] = ftell(fp);
+            fwrite(&dir, sizeof(TABM), 1, fp);
+
+            fseek(fp, 0L, SEEK_SET);
+            fwrite(&raiz, sizeof(TABM), 1, fp);
+            
+            
+            liberaAtleta(atletaMediano);
+        } else{
+            //insere na folha;
+            raiz.nchaves++;
+            //verifica se nome vai ser atualizado
+            int posChave = pos_novo_no_folha(raiz.chaves[0], atleta->nome);
+
+            if(posChave == 0 && strcmp(atleta->nome, raiz.chaves[0])!= 0){
+                rename(raiz.chaves[0], atleta->nome);
+                strcpy(raiz.chaves[0], atleta->nome);
+            }
+            insere_atleta_folha(raiz.chaves[0], atleta);
+            fseek(fp, 0L, SEEK_SET);
+            fwrite(&raiz, sizeof(TABM), 1, fp);
+            fclose(fp);
+            return;
+        }
+    } else if(raiz.nchaves == 2*T-1){ //raiz é nó interno, verificar se é completo
+        TABM esq, dir;
+        esq.folha = 0;
+        dir.folha = 0;
+        esq.nchaves = T-1;
+        dir.nchaves = T-1;
+        raiz.nchaves = 1;
+
+        //atualizar chaves
+        for(int i = 0; i < T-1; i++){
+            strcpy(esq.chaves[i], raiz.chaves[i]);
+            strcpy(dir.chaves[i], raiz.chaves[i + T]);
+        }
+        strcpy(raiz.chaves[0], raiz.chaves[T-1]);
+
+        //atualizar filhos
+        for(int i = 0; i < T; i++){
+            esq.filhos[i] = raiz.filhos[i];
+            dir.filhos[i] = raiz.filhos[i+T];
+        }
+        //registrar indiices
+        int ppl = TABM_ppl(fp);
+        fseek(fp, ppl, SEEK_SET);
+        raiz.filhos[0] = ftell(fp);
+        fwrite(&esq, sizeof(TABM), 1, fp);
+
+        ppl = TABM_ppl(fp);
+        fseek(fp, ppl, SEEK_SET);
+        raiz.filhos[1] = ftell(fp);
+        fwrite(&dir, sizeof(TABM), 1, fp);
+
+        fseek(fp, 0L, SEEK_SET);
+        fwrite(&raiz, sizeof(TABM), 1, fp);
+    }
+    //raiz é nó interno e não completo, fazer recursão
+    //...
+    fclose(fp);
+    return;
+}
+
+
+
 
 void TABM_inicializa(char *nome_indice){
     FILE* fidx = fopen(nome_indice, "wb");
@@ -308,458 +410,9 @@ void TABM_inicializa(char *nome_indice){
         printf("Houve um erro ao inicializar a arvore B+");
         exit(1);
     }
-
-    char nomeFolha[25] = "ZZZZZZZZZZZZZZZZZZZZZ";
-    sprintf(nomeFolha, "f%d.bin", 0);
-    inicializar_folha(nomeFolha);
-
-    TABM raiz;
-    raiz.nchaves = 0;
-    for(int i = 0; i < (T*2)-1; i++) strcpy(raiz.chaves[i], "");
-    strcpy(raiz.chaves[0], nomeFolha);
-    raiz.folha = 1;
-    for(int i = 0; i < (T*2); i++) raiz.filhos[i] = -1;
-    raiz.prox = -1;
-
-    int proxIdFolha = 1;
-    fwrite(&proxIdFolha, sizeof(int), 1, fidx);
-    fwrite(&raiz, sizeof(TABM), 1, fidx);
-
     fclose(fidx);
 }
 
-void TABM_ins_aux_alt(FILE* fp, int posAtual, int posAnt, TAtleta* atleta);
-
-void TABM_insere(char *nome_indice, TAtleta* atleta){
-    char nome_folha[25];
-    strcpy(nome_folha, atleta->nome);
-    FILE* fp = fopen(nome_indice, "rb+");
-    if(!fp){
-        printf("Houve um erro ao inserir na arvore B+");
-        exit(1);
-    }
-    int idNovaFolha, posAnt = -1, posAtual;
-    fread(&idNovaFolha, sizeof(int), 1, fp);
-    posAtual = ftell(fp);
-    TABM no;
-    fread(&no, sizeof(TABM), 1, fp);
-    if(no.nchaves == 2*T-1 && no.folha == 0){
-        //dividir raíz (raiz continua como no interno)
-        TABM esq, dir;
-        esq.folha = 0;
-        dir.folha = 0;
-        esq.nchaves = T-1;
-        dir.nchaves = T-1;
-        for(int i = 0; i < T-1; i++){
-            strcpy(esq.chaves[i], no.chaves[i]);
-        }
-        for(int i = 0; i < T-1; i++){
-            strcpy(dir.chaves[i], no.chaves[i+T]);
-        }
-        strcpy(no.chaves[0], no.chaves[T-1]);
-        no.nchaves = 1;
-
-        for(int i = 0; i < T; i++){
-            esq.filhos[i] = no.filhos[i];
-            dir.filhos[i] = no.filhos[i+T];
-        }
-
-        int pos_ppl = TABM_ppl(fp);
-        fseek(fp, pos_ppl, SEEK_SET);
-        no.filhos[0] = ftell(fp);
-        fwrite(&esq, sizeof(TABM), 1, fp);
-
-        pos_ppl = TABM_ppl(fp);
-        fseek(fp, pos_ppl, SEEK_SET);
-        no.filhos[1] = ftell(fp);
-        fwrite(&dir, sizeof(TABM), 1, fp);
-
-
-        fseek(fp, posAtual, SEEK_SET);
-        fwrite(&no, sizeof(TABM), 1, fp);
-    } else if(no.nchaves == 2*T-1 && no.folha == 1){
-        //dividir raíz e inserir (raiz vira um no interno)
-        
-        
-        //DIVIDIR FOLHA
-        TABM esq, dir;
-        esq.folha = 1;
-        dir.folha = 1;
-        no.folha = 0;
-        esq.nchaves = T-1;
-        dir.nchaves = T;
-        
-        
-        
-
-        TAtleta* aux = buscaAtletaNFolha(no.chaves[0], T-1);
-        char nomeFolha[25] = "";
-        strcat(nomeFolha, aux->nome);
-        liberaAtleta(aux);
-        idNovaFolha++;
-
-        inicializar_folha(nomeFolha);
-        strcpy(dir.chaves[0], nomeFolha);
-        for(int i = T-1; i < 2*T-1; i++){
-            TAtleta* aux = buscaAtletaNFolha(no.chaves[0], i);
-            insere_atleta_folha(nomeFolha, aux);
-            liberaAtleta(aux);
-        }
-        
-        strcpy(esq.chaves[0], no.chaves[0]);
-        for(int i = T-1; i < 2*T-1; i++){
-            TAtleta* aux = buscaAtletaNFolha(no.chaves[0], i);
-            removeAtletaFolha(no.chaves[0], aux->nome);
-            liberaAtleta(aux);
-        }
-
-        
-
-
-        no.nchaves = 1;
-        strcpy(no.chaves[0], dir.chaves[0]);
-
-        int pos_ppl = TABM_ppl(fp);
-        fseek(fp, pos_ppl, SEEK_SET);
-        no.filhos[0] = ftell(fp);
-        fwrite(&esq, sizeof(TABM), 1, fp);
-
-        pos_ppl = TABM_ppl(fp);
-        fseek(fp, pos_ppl, SEEK_SET);
-        no.filhos[1] = ftell(fp);
-        fwrite(&dir, sizeof(TABM), 1, fp);
-
-
-        fseek(fp, posAtual, SEEK_SET);
-        fwrite(&no, sizeof(TABM), 1, fp);
-
-        //atualizar idNovaFolha
-        fseek(fp, 0L, SEEK_SET);
-        fwrite(&idNovaFolha, sizeof(int), 1, fp);
-    } else if(no.folha == 1){
-        //inserir na raiz
-        insere_atleta_folha(no.chaves[0], atleta);
-        no.nchaves++;
-        if(strcmp(no.chaves[0], atleta->nome) > 0) strcpy(no.chaves[0], atleta->nome);
-        fseek(fp, posAtual, SEEK_SET);
-        fwrite(&no, sizeof(TABM), 1, fp);
-        
-        //atualizar idNovaFolha
-        fseek(fp, 0L, SEEK_SET);
-        fwrite(&idNovaFolha, sizeof(int), 1, fp);
-        fclose(fp);
-        return;
-    }
-    //raiz é no interno
-    for(int i = 0; i < no.nchaves; i++){
-        if(strcmp(no.chaves[i], nome_folha)>0){
-            //primeiro maior, vá para a esquerda
-            TABM_ins_aux(fp, no.filhos[i], posAtual, atleta);
-            fclose(fp);
-            return;
-        } else if(strcmp(no.chaves[i], nome_folha) == 0){
-            //encontrou o valor, vá para a direita
-            TABM_ins_aux(fp, no.filhos[i+1], posAtual, atleta);
-            fclose(fp);
-            return;
-        }
-    }
-    //chave buscada é maior que todas as chaves do nó atual, ir para o filho a direita da última chave
-    TABM_ins_aux(fp, no.filhos[no.nchaves], posAtual, atleta);
-    fclose(fp);
-    return;
-}
-
-void TABM_ins_aux_alt(FILE* fp, int posAtual, int posAnt, TAtleta* atleta){
-    TABM no;
-    fseek(fp, posAtual, SEEK_SET);
-    fread(&no, sizeof(TABM), 1, fp);
-    if(no.folha == 0){
-        if(no.nchaves == 2*T-1){
-            //dividir no interno
-            printf("if 1\n");
-            TABM pai;
-            fseek(fp, posAnt, SEEK_SET);
-            fread(&pai, sizeof(TABM), 1, fp);
-
-
-            TABM esq, dir;
-            esq.folha = 0;
-            dir.folha = 0;
-            esq.nchaves = T-1;
-            dir.nchaves = T-1;
-            for(int i = 0; i < T-1; i++){
-                strcpy(esq.chaves[i], no.chaves[i]);
-            }
-            for(int i = 0; i < T-1; i++){
-                strcpy(dir.chaves[i], no.chaves[i+T]);
-            }
-            strcpy(no.chaves[0], no.chaves[T-1]);
-            no.nchaves = 1;
-
-            for(int i = 0; i < T; i++){
-                esq.filhos[i] = no.filhos[i];
-                dir.filhos[i] = no.filhos[i+T];
-            }
-
-
-            int pos_ppl = TABM_ppl(fp);
-            fseek(fp, pos_ppl, SEEK_SET);
-            no.filhos[0] = ftell(fp);
-            fwrite(&esq, sizeof(TABM), 1, fp);
-
-            pos_ppl = TABM_ppl(fp);
-            fseek(fp, pos_ppl, SEEK_SET);
-            no.filhos[1] = ftell(fp);
-            fwrite(&dir, sizeof(TABM), 1, fp);
-
-
-
-            //encontrar no pai onde colocar a chave em no
-            int i = pos_novo_no_int(pai.chaves, pai.nchaves, no.chaves[0]);
-            for(int j = pai.nchaves; j > i; j--){
-                strcpy(pai.chaves[j], pai.chaves[j-1]);
-                pai.filhos[j+1] = pai.filhos[j];
-                pai.filhos[j]   = pai.filhos[j-1];
-            }
-
-
-            pai.filhos[i] = no.filhos[0];
-            pai.filhos[i+1] = no.filhos[1];
-            strcpy(pai.chaves[i], no.chaves[0]);
-            pai.nchaves++;
-
-            fseek(fp, posAnt, SEEK_SET);
-            fwrite(&pai, sizeof(TABM), 1, fp);
-
-
-            //disponibilizar endereço do no atual antigo
-            fseek(fp, posAtual, SEEK_SET);
-            no.folha = -1;
-            fwrite(&no, sizeof(TABM), 1, fp);
-
-
-
-
-            //inserir no
-            if(strcmp(pai.chaves[i], nome_no) <= 0){
-                //recursão para a direita
-                TABM_ins_aux(fp, pai.filhos[i+1], posAnt, atleta);
-            } else if (strcmp(pai.chaves[i], nome_no) > 0){
-                //recursão para a esquerda
-                TABM_ins_aux(fp, pai.filhos[i], posAnt, atleta);
-            }
-            return;
-        }
-    }
-}
-
-
-void TABM_ins_aux(FILE* fp, int posAtual, int posAnt, TAtleta* atleta){
-    char nome_no[25];
-    strcpy(nome_no, atleta->nome);
-    fseek(fp, posAtual, SEEK_SET);
-    TABM no;
-    fread(&no, sizeof(TABM), 1, fp);
-
-    if(no.folha==1){
-        //buscar se nome_no já existe
-        TAtleta* aux = buscaAtletaFolha(no.chaves[0], atleta->nome);
-        if(aux){
-            liberaAtleta(aux);
-            //atualizar no;
-            return;
-        }
-        if(aux) liberaAtleta(aux);
-        //nome_no nao existe, verificar se o nó está completo
-        if(no.nchaves == 2*T-1){
-            printf("if 1\n");
-            TABM pai;
-            fseek(fp, posAnt, SEEK_SET);
-            fread(&pai, sizeof(TABM), 1, fp);
-
-            //dividir no atual em dois
-            TABM esq, dir;
-            esq.folha = 1;
-            dir.folha = 1;
-            no.folha = 0;
-            esq.nchaves = T-1;
-            dir.nchaves = T;
-            for(int i = 0; i < T-1; i++){
-                strcpy(esq.chaves[i], no.chaves[i]);
-            }
-            for(int i = 0; i < T; i++){
-                strcpy(dir.chaves[i], no.chaves[i+T-1]);
-            }
-            strcpy(no.chaves[0], no.chaves[T-1]);
-            no.nchaves = 1;
-
-
-            int pos_ppl = TABM_ppl(fp);
-            fseek(fp, pos_ppl, SEEK_SET);
-            no.filhos[0] = ftell(fp);
-            fwrite(&esq, sizeof(TABM), 1, fp);
-
-            pos_ppl = TABM_ppl(fp);
-            fseek(fp, pos_ppl, SEEK_SET);
-            no.filhos[1] = ftell(fp);
-            fwrite(&dir, sizeof(TABM), 1, fp);
-
-
-
-            int i = pos_novo_no_int(pai.chaves, pai.nchaves, no.chaves[0]);
-            for(int j = pai.nchaves; j > i; j--){
-                strcpy(pai.chaves[j], pai.chaves[j-1]);
-                pai.filhos[j+1] = pai.filhos[j];
-                pai.filhos[j]   = pai.filhos[j-1];
-            }
-
-            //atualizar pai
-            pai.filhos[i] = no.filhos[0];
-            pai.filhos[i+1] = no.filhos[1];
-            strcpy(pai.chaves[i], no.chaves[0]);
-            pai.nchaves++;
-
-            fseek(fp, posAnt, SEEK_SET);
-            fwrite(&pai, sizeof(TABM), 1, fp);
-
-
-            //disponibilizar endereço do nó atual antigo
-            no.folha = -1;
-            fseek(fp, posAtual, SEEK_SET);
-            fwrite(&no, sizeof(TABM), 1, fp);
-
-
-
-            //inserir no
-            if(strcmp(pai.chaves[i], nome_no) <= 0){
-                //recursão para a direita
-                TABM_ins_aux(fp, pai.filhos[i+1], posAnt, atleta);
-            } else if (strcmp(pai.chaves[i], nome_no) > 0){
-                //recursão para a esquerda
-                TABM_ins_aux(fp, pai.filhos[i], posAnt, atleta);
-            }
-            return;
-        } else{
-            printf("if 2\n");
-            //inserir no arquivo folha
-            insere_atleta_folha(no.chaves[0], atleta);
-            if(strcmp(no.chaves[0], atleta->nome) > 0) strcpy(no.chaves[0], atleta->nome);
-            //atualizar no...
-            fseek(fp, posAtual, SEEK_SET);
-            fwrite(&no, sizeof(TABM), 1, fp);
-
-            return;
-        }
-    } else{
-        if(no.nchaves == 2*T -1){
-            printf("if 3\n");
-            //dividir o nó
-            TABM pai;
-            fseek(fp, posAnt, SEEK_SET);
-            fread(&pai, sizeof(TABM), 1, fp);
-
-
-            TABM esq, dir;
-            esq.folha = 0;
-            dir.folha = 0;
-            esq.nchaves = T-1;
-            dir.nchaves = T-1;
-            for(int i = 0; i < T-1; i++){
-                strcpy(esq.chaves[i], no.chaves[i]);
-            }
-            for(int i = 0; i < T-1; i++){
-                strcpy(dir.chaves[i], no.chaves[i+T]);
-            }
-            strcpy(no.chaves[0], no.chaves[T-1]);
-            no.nchaves = 1;
-
-            for(int i = 0; i < T; i++){
-                esq.filhos[i] = no.filhos[i];
-                dir.filhos[i] = no.filhos[i+T];
-            }
-
-
-            int pos_ppl = TABM_ppl(fp);
-            fseek(fp, pos_ppl, SEEK_SET);
-            no.filhos[0] = ftell(fp);
-            fwrite(&esq, sizeof(TABM), 1, fp);
-
-            pos_ppl = TABM_ppl(fp);
-            fseek(fp, pos_ppl, SEEK_SET);
-            no.filhos[1] = ftell(fp);
-            fwrite(&dir, sizeof(TABM), 1, fp);
-
-
-
-            //encontrar no pai onde colocar a chave em no
-            int i = pos_novo_no_int(pai.chaves, pai.nchaves, no.chaves[0]);
-            for(int j = pai.nchaves; j > i; j--){
-                strcpy(pai.chaves[j], pai.chaves[j-1]);
-                pai.filhos[j+1] = pai.filhos[j];
-                pai.filhos[j]   = pai.filhos[j-1];
-            }
-
-
-            pai.filhos[i] = no.filhos[0];
-            pai.filhos[i+1] = no.filhos[1];
-            strcpy(pai.chaves[i], no.chaves[0]);
-            pai.nchaves++;
-
-            fseek(fp, posAnt, SEEK_SET);
-            fwrite(&pai, sizeof(TABM), 1, fp);
-
-
-            //disponibilizar endereço do no atual antigo
-            fseek(fp, posAtual, SEEK_SET);
-            no.folha = -1;
-            fwrite(&no, sizeof(TABM), 1, fp);
-
-
-
-
-            //inserir no
-            if(strcmp(pai.chaves[i], nome_no) <= 0){
-                //recursão para a direita
-                TABM_ins_aux(fp, pai.filhos[i+1], posAnt, atleta);
-            } else if (strcmp(pai.chaves[i], nome_no) > 0){
-                //recursão para a esquerda
-                TABM_ins_aux(fp, pai.filhos[i], posAnt, atleta);
-            }
-            return;
-        } else{
-            printf("if 4\n");
-            //apenas buscar onde fazer a recursão
-            int i;
-            for(i = 0; i < no.nchaves; i++){
-                if(strcmp(no.chaves[i], nome_no) > 0){
-                    //encontrou primeiro maior
-                    break;
-                }
-            }
-            TABM_ins_aux(fp, no.filhos[i], posAtual, atleta);
-
-        }
-    }
-}
-
-void printTABM(FILE* fin, int nivel, int posAtual){
-    fseek(fin, posAtual, SEEK_SET);
-    TABM no;
-    fread(&no, sizeof(TABM), 1, fin);
-    if(no.folha == 1){
-        printf("Eh folha, Arquivos: \n");
-        for(int i = 0; i < no.nchaves; i++) printf("%s, ", no.chaves[i]);
-        printf("\n");
-    } else{
-        printf("Eh no interno, Chaves: \n");
-        for(int i = 0; i < no.nchaves; i++) printf("%s, ", no.chaves[i]);
-        printf("\n");
-        for(int i = 0; i <= no.nchaves; i++) printTABM(fin, nivel+1, no.filhos[i]);
-    }
-    
-
-}
 
 
 #endif

@@ -10,8 +10,8 @@ int main(){
     TABM_insere("index.bin", atleta);
     strcpy(atleta->nome, "olgopolov");
     TABM_insere("index.bin", atleta);
-    // strcpy(atleta->nome, "Chardy");
-    // TABM_insere("index.bin", atleta);
+    strcpy(atleta->nome, "Chardy");
+    TABM_insere("index.bin", atleta);
     // strcpy(atleta->nome, "Djokovic");
     // TABM_insere("index.bin", atleta);
     // TABM_insere("index.bin", "olgopolov");
@@ -42,8 +42,6 @@ int main(){
     
     
 
-    printf("\n\n");
-    printTABM(fin, 0, sizeof(int));
     
     
     liberaAtleta(atleta);
