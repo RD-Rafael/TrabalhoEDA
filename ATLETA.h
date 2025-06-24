@@ -16,25 +16,9 @@ typedef struct _atleta{
     int x; //Experimentando
 } TAtleta;
 
-TAtleta* AtletaInit(){
-    return NULL;
-}
-TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank){
-    TAtleta* atleta = (TAtleta*) malloc(sizeof(TAtleta));
-    strcpy(atleta->nome, nome);
-    atleta->anoNascimento = anoNascimento;
-    atleta->anoMorte = anoMorte;
-    strcpy(atleta->nacionalidade, nacionalidade);
-    atleta->rank = rank;
-    atleta->anoMelhorRank = anoMelhorRank;
-    return atleta;
-}
-
-void liberaAtleta(TAtleta* atleta){
-    free(atleta);
-}
-
-
-
+// Just function declarations (prototypes)
+TAtleta* AtletaInit();
+TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank);
+void liberaAtleta(TAtleta* atleta);
 
 #endif

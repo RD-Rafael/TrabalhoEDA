@@ -3,11 +3,13 @@
 #include <string.h>
 #include "HASH.h"
 #include "../ATLETA.h"
+#include <limits.h>
 
 /*A fazer:
     Planejar diferencição entre as funções hash(ou não);
     Precisamos lidar com a quantidade de semanas no melhor ranking
     Dar fclose nos arquivos
+    Inserir ordenado de acordo com a característica sendo avaliada
 */
 
 typedef struct data{
@@ -15,48 +17,9 @@ typedef struct data{
     int prox;
 }Data;
 
-int get_hash(TAtleta atleta, int hash_size){
-    return (atleta.anoNascimento - 1960)%hash_size;
-}
-
-void print_atleta(TAtleta atleta){
-    printf("%s - ", atleta.nome);
-    printf("%d - ", atleta.anoNascimento);
-    printf("%d - ", atleta.anoMorte);
-    printf("%s - ", atleta.nacionalidade);
-    printf("%d - ", atleta.rank);
-    printf("%d - ", atleta.anoMelhorRank);
-    printf("%d\n", atleta.x);
-
-}
-
-void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size){
-
-    int hash = get_hash(atleta, hash_size);
-
-
-    char nome[25];
-
-    Data new;
-    fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
-    fread(&new, sizeof(Data), 1, arq_hash);
-
-
-
-    if(strcmp(new.nome, "-") == 0){
-        fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
-        strcpy(new.nome, atleta.nome);
-        new.prox = -1;
-        fwrite(&new, sizeof(Data), 1, arq_hash);
-    }
-
-
-    // printf("%d\n", get_hash(atleta));
-}
-
 void inicializa_arq_hash_vazio(FILE* arq_hash, int hash_size){
 
-    Data new = {.nome = "-", .prox = -1};
+    Data new = {.nome = "-", .prox = INT_MIN};
 
     for (int i = 0; i < hash_size; i++)
     {
@@ -70,7 +33,67 @@ void inicializa_arq_hash_vazio(FILE* arq_hash, int hash_size){
 
 }
 
-void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size){
+void print_atleta(TAtleta atleta){
+    printf("%s - ", atleta.nome);
+    printf("%d - ", atleta.anoNascimento);
+    printf("%d - ", atleta.anoMorte);
+    printf("%s - ", atleta.nacionalidade);
+    printf("%d - ", atleta.rank);
+    printf("%d - ", atleta.anoMelhorRank);
+    printf("%d\n", atleta.x);
+
+}
+
+
+
+void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(void* chave)){
+
+    int hash = hash_func(&atleta);
+
+    Data aux;
+    fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
+    fread(&aux, sizeof(Data), 1, arq_hash);
+
+    //Espaço vazio, pode escrever ali
+    if(aux.prox == INT_MIN){
+        fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
+        strcpy(aux.nome, atleta.nome);
+        aux.prox = -1;
+        fwrite(&aux, sizeof(Data), 1, arq_hash);
+        fseek(arq_hash, 0, SEEK_SET);
+        return;
+    }
+
+    //Colisão, percorrer lista até o fim
+    while (aux.prox != -1)
+    {   
+        fseek(arq_hash, aux.prox, SEEK_SET);
+
+        fread(&aux, sizeof(Data), 1, arq_hash);
+    }
+
+    fseek(arq_hash, -sizeof(Data), SEEK_CUR);
+    int ant = ftell(arq_hash);
+    fseek(arq_hash, 0, SEEK_END);
+
+    aux.prox = ftell(arq_hash); 
+    fseek(arq_hash, ant, SEEK_SET);
+    fwrite(&aux, sizeof(Data), 1, arq_hash);
+
+
+    strcpy(aux.nome, atleta.nome);
+    aux.prox = -1;
+
+    fseek(arq_hash, 0, SEEK_END);
+    fwrite(&aux, sizeof(Data), 1, arq_hash);
+    
+
+
+}
+
+
+
+void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave)){
 
     FILE* arq_dados = fopen(nome_arq_dados, "r");
     FILE* arq_hash = fopen(nome_arq_hash, "wb+");
@@ -110,6 +133,8 @@ void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size){
 
     char linha[300];
 
+    int i = 0;
+
     while(fgets(linha, sizeof(linha)/sizeof(linha[0]),arq_dados ) != NULL){
 
         int qtd_res = sscanf(linha, "%[^\\]\\%d\\%[^\\]\\%[^\\]\\%[^\\]\\%s (%d)",
@@ -134,23 +159,31 @@ void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size){
         if(strcmp(anoRank_buffer, "-") == 0) atleta.anoMelhorRank = -1;
         else atleta.anoMelhorRank = atoi(anoRank_buffer);
 
+        
         // print_atleta(atleta);
 
-        HASH_inserir(arq_hash, atleta, hash_size);
+        HASH_inserir(arq_hash, atleta, hash_size, hash_func);
 
+        i++;
+
+        // if(i >= 2) break;
 
     }
+
+    printf("Qtd de atletas: %d\n", i);
+
 
     Data k;
 
     fseek(arq_hash, 0, SEEK_SET);
 
-    for (int i = 0; i < hash_size; i++)
-    {
-        fread(&k, sizeof(Data), 1, arq_hash);
 
+    while(fread(&k, sizeof(Data), 1, arq_hash) != 0)
+    {
         printf("%s\n", k.nome);
+    
     }
+
     
     
     
