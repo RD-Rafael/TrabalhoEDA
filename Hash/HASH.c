@@ -6,9 +6,7 @@
 #include <limits.h>
 
 /*A fazer:
-    Planejar diferencição entre as funções hash(ou não);
     Precisamos lidar com a quantidade de semanas no melhor ranking
-    Inserir ordenado de acordo com a característica sendo avaliada
 */
 
 typedef struct data{
@@ -16,31 +14,6 @@ typedef struct data{
     int prox;
 }Data;
 
-void HASH_print(char* nome_arq, int hash_size){
-    FILE* arq_hash = fopen(nome_arq, "rb");
-
-    Data aux;
-
-    for (int i = 0; i < hash_size; i++)
-    {
-        fseek(arq_hash, sizeof(Data)*i, SEEK_SET);
-        fread(&aux, sizeof(Data), 1, arq_hash);
-        printf("%s", aux.nome);
-
-        while (aux.prox != INT_MIN && aux.prox != -1 )
-        {   
-            printf("-->");
-            fseek(arq_hash, aux.prox, SEEK_SET);
-            fread(&aux, sizeof(Data), 1, arq_hash);
-            printf("%s", aux.nome);
-        }
-
-        printf("\n");
-    }
-
-    fclose(arq_hash);
-
-}
 
 void inicializa_arq_hash_vazio(FILE* arq_hash, int hash_size){
 
@@ -57,18 +30,6 @@ void inicializa_arq_hash_vazio(FILE* arq_hash, int hash_size){
 
 
 }
-
-void print_atleta(TAtleta atleta){
-    printf("%s - ", atleta.nome);
-    printf("%d - ", atleta.anoNascimento);
-    printf("%d - ", atleta.anoMorte);
-    printf("%s - ", atleta.nacionalidade);
-    printf("%d - ", atleta.rank);
-    printf("%d - ", atleta.anoMelhorRank);
-    printf("%d\n", atleta.x);
-
-}
-
 
 
 void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b)){
@@ -90,37 +51,57 @@ void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(v
     }
 
     //Colisão, percorrer lista até o fim
-    while (aux.prox != -1)
+    while (ord_func(&atleta, &aux) > 0 && aux.prox != -1)
     {   
         fseek(arq_hash, aux.prox, SEEK_SET);
 
         fread(&aux, sizeof(Data), 1, arq_hash);
     }
 
+
     fseek(arq_hash, -sizeof(Data), SEEK_CUR);
     int ant = ftell(arq_hash);
     fseek(arq_hash, 0, SEEK_END);
 
-    aux.prox = ftell(arq_hash); 
-    fseek(arq_hash, ant, SEEK_SET);
-    fwrite(&aux, sizeof(Data), 1, arq_hash);
 
 
-    strcpy(aux.nome, atleta.nome);
-    aux.prox = -1;
+    if(aux.prox == -1 && ord_func(&atleta, &aux) > 0){
 
-    fseek(arq_hash, 0, SEEK_END);
-    fwrite(&aux, sizeof(Data), 1, arq_hash);
-    
+        aux.prox = ftell(arq_hash); 
+        fseek(arq_hash, ant, SEEK_SET);
+        fwrite(&aux, sizeof(Data), 1, arq_hash);
+        fseek(arq_hash, 0, SEEK_END);
 
 
+
+        strcpy(aux.nome, atleta.nome);
+        aux.prox = -1;
+
+        fseek(arq_hash, 0, SEEK_END);
+        fwrite(&aux, sizeof(Data), 1, arq_hash);
+
+    }
+    else{
+        Data new;
+
+        strcpy(new.nome, atleta.nome);
+
+        new.prox = ftell(arq_hash);
+
+        fwrite(&aux, sizeof(Data), 1, arq_hash);
+
+        fseek(arq_hash, ant, SEEK_SET);
+
+        fwrite(&new, sizeof(Data), 1, arq_hash);
+
+    }
 }
-
 
 
 void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b)){
 
     FILE* arq_dados = fopen(nome_arq_dados, "r");
+    // FILE* arq_hash = fopen(nome_arq_hash, "rb+");
     FILE* arq_hash = fopen(nome_arq_hash, "wb+");
 
     if(!arq_dados) {
@@ -188,13 +169,39 @@ void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, i
 
         i++;
 
-        // if(i >= 50) break;
+    // if(i >= 10) break;
 
     }
 
     printf("Qtd de atletas adicionados: %d\n", i);
 
     fclose(arq_dados);
+    fclose(arq_hash);
+
+}
+
+void HASH_print(char* nome_arq, int hash_size){
+    FILE* arq_hash = fopen(nome_arq, "rb");
+
+    Data aux;
+
+    for (int i = 0; i < hash_size; i++)
+    {
+        fseek(arq_hash, sizeof(Data)*i, SEEK_SET);
+        fread(&aux, sizeof(Data), 1, arq_hash);
+        printf("%s", aux.nome);
+
+        while (aux.prox != INT_MIN && aux.prox != -1 )
+        {   
+            printf("-->");
+            fseek(arq_hash, aux.prox, SEEK_SET);
+            fread(&aux, sizeof(Data), 1, arq_hash);
+            printf("%s", aux.nome);
+        }
+
+        printf("\n");
+    }
+
     fclose(arq_hash);
 
 }
