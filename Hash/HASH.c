@@ -8,7 +8,6 @@
 /*A fazer:
     Planejar diferencição entre as funções hash(ou não);
     Precisamos lidar com a quantidade de semanas no melhor ranking
-    Dar fclose nos arquivos
     Inserir ordenado de acordo com a característica sendo avaliada
 */
 
@@ -16,6 +15,32 @@ typedef struct data{
     char nome[25];
     int prox;
 }Data;
+
+void HASH_print(char* nome_arq, int hash_size){
+    FILE* arq_hash = fopen(nome_arq, "rb");
+
+    Data aux;
+
+    for (int i = 0; i < hash_size; i++)
+    {
+        fseek(arq_hash, sizeof(Data)*i, SEEK_SET);
+        fread(&aux, sizeof(Data), 1, arq_hash);
+        printf("%s", aux.nome);
+
+        while (aux.prox != INT_MIN && aux.prox != -1 )
+        {   
+            printf("-->");
+            fseek(arq_hash, aux.prox, SEEK_SET);
+            fread(&aux, sizeof(Data), 1, arq_hash);
+            printf("%s", aux.nome);
+        }
+
+        printf("\n");
+    }
+
+    fclose(arq_hash);
+
+}
 
 void inicializa_arq_hash_vazio(FILE* arq_hash, int hash_size){
 
@@ -46,7 +71,7 @@ void print_atleta(TAtleta atleta){
 
 
 
-void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(void* chave)){
+void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b)){
 
     int hash = hash_func(&atleta);
 
@@ -93,7 +118,7 @@ void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(v
 
 
 
-void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave)){
+void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b)){
 
     FILE* arq_dados = fopen(nome_arq_dados, "r");
     FILE* arq_hash = fopen(nome_arq_hash, "wb+");
@@ -159,37 +184,17 @@ void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, i
         if(strcmp(anoRank_buffer, "-") == 0) atleta.anoMelhorRank = -1;
         else atleta.anoMelhorRank = atoi(anoRank_buffer);
 
-        
-        // print_atleta(atleta);
-
-        HASH_inserir(arq_hash, atleta, hash_size, hash_func);
+        HASH_inserir(arq_hash, atleta, hash_size, hash_func, ord_func);
 
         i++;
 
-        // if(i >= 2) break;
+        // if(i >= 50) break;
 
     }
 
-    printf("Qtd de atletas: %d\n", i);
+    printf("Qtd de atletas adicionados: %d\n", i);
 
-
-    Data k;
-
-    fseek(arq_hash, 0, SEEK_SET);
-
-
-    while(fread(&k, sizeof(Data), 1, arq_hash) != 0)
-    {
-        printf("%s\n", k.nome);
-    
-    }
-
-    
-    
-    
-
-   
-
-
+    fclose(arq_dados);
+    fclose(arq_hash);
 
 }
