@@ -13,6 +13,7 @@ typedef struct _atleta{
     //-1 significa que nunca entrou no rank
     int rank;
     int anoMelhorRank;
+    int x; //Experimentando
 } TAtleta;
 
 TAtleta* AtletaInit(){
