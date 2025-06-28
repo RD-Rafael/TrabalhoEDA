@@ -663,6 +663,11 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
             removeAtletaFolha(no.chaves[0], nomeAtleta);
             liberaAtleta(atleta);
             no.nchaves--;
+            if(no.nchaves >0){
+                atleta = buscaAtletaNFolha(no.chaves[0], 0);
+                rename(no.chaves[0], atleta->nome);
+                strcpy(no.chaves[0], atleta->nome);
+            }
 
             fseek(fp, posAtual, SEEK_SET);
             fwrite(&no, sizeof(TABM), 1, fp);
@@ -674,6 +679,8 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
     for(i = 0; i < no.nchaves; i++){
         if(strcmp(nomeAtleta, no.chaves[i]) < 0) break;
     }
+    int kChave = i;
+    if(i-1 < no.nchaves && i-1 >= 0 && strcmp(nomeAtleta, no.chaves[i-1]) >= 0) kChave = i-1;
 
     TABM filho;
     fseek(fp, no.filhos[i], SEEK_SET);
@@ -683,7 +690,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
         TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
         return;
     }
-
+    //filho.nchaves <= T-1
     int temEsq = (i>0);
     int temDir = (i<no.nchaves);
 
@@ -702,8 +709,10 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
 
     if(no_esq.nchaves > T-1){
         if(no_esq.folha == 1){
-            //no e no_esq são folhas
+            printf("CASO 3A esquerdo noh folha\n");
+            //filho e no_esq são folhas
             TAtleta* atletaEmprestado = buscaAtletaNFolha(no_esq.chaves[0], no_esq.nchaves-1);
+            removeAtletaFolha(no_esq.chaves[0], atletaEmprestado->nome);
             no_esq.nchaves--;
             insere_atleta_folha(filho.chaves[0], atletaEmprestado);
             filho.nchaves++;
@@ -711,7 +720,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
             rename(filho.chaves[0], atletaEmprestado->nome);
             strcpy(filho.chaves[0], atletaEmprestado->nome);
 
-            strcpy(no.chaves[i-1], atletaEmprestado->nome);
+            strcpy(no.chaves[kChave], atletaEmprestado->nome);
 
             fseek(fp, no.filhos[i], SEEK_SET);
             fwrite(&filho, sizeof(TABM), 1, fp);
@@ -721,23 +730,92 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
             fwrite(&no, sizeof(TABM), 1, fp);
 
             liberaAtleta(atletaEmprestado);
-
+            TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
             return;
         } else{
-            // no e no_esq são nó internos
-
+            printf("CASO 3A esquerdo noh int\n");
+            // filho, no e no_esq são nó internos
             for(int j = filho.nchaves-1; j >=0; j--){
                 strcpy(filho.chaves[j+1], filho.chaves[j]);
             }
             for(int j = filho.nchaves; j >=0; j--){
                 filho.filhos[j+1] = filho.filhos[j];
             }
-            
+            strcpy(filho.chaves[0], no.chaves[kChave]);
+            strcpy(no.chaves[kChave], no_esq.chaves[no_esq.nchaves-1]);
+
+            filho.filhos[0] = no_esq.filhos[no_esq.nchaves];
+
+            no_esq.nchaves--;
+            filho.nchaves++;
+
+            fseek(fp, no.filhos[i], SEEK_SET);
+            fwrite(&filho, sizeof(TABM),1, fp);
+            fseek(fp, no.filhos[i-1], SEEK_SET);
+            fwrite(&no_esq, sizeof(TABM), 1, fp);
+            fseek(fp, posAtual, SEEK_SET);
+            fwrite(&no, sizeof(TABM), 1, fp);
+
+            TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
+            return;
         }
     } else if(no_dir.nchaves > T-1){
+        if(no_dir.folha == 1){
+            printf("CASO 3A direito noh folha\n");
+            //no_dir e filho são folhas
+            TAtleta* atletaEmprestado = buscaAtletaNFolha(no_dir.chaves[0], 0);
+            removeAtletaFolha(no_dir.chaves[0], atletaEmprestado->nome);
+            no_dir.nchaves--;
+            insere_atleta_folha(filho.chaves[0], atletaEmprestado);
+            filho.nchaves++;
+            liberaAtleta(atletaEmprestado);
 
+            TAtleta* novoPrimAtletadir = buscaAtletaNFolha(no_dir.chaves[0], 0);
+            rename(no_dir.chaves[0], novoPrimAtletadir->nome);
+            strcpy(no_dir.chaves[0], novoPrimAtletadir->nome);
+
+            strcpy(no.chaves[kChave + 1], novoPrimAtletadir->nome);
+
+            liberaAtleta(novoPrimAtletadir);
+        
+            fseek(fp, no.filhos[i], SEEK_SET);
+            fwrite(&filho, sizeof(TABM), 1, fp);
+            fseek(fp, no.filhos[i+1], SEEK_SET);
+            fwrite(&no_dir, sizeof(TABM), 1, fp);
+            fseek(fp, posAtual, SEEK_SET);
+            fwrite(&no, sizeof(TABM), 1, fp);
+
+            
+            TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
+            return;
+        } else{
+            printf("CASO 3A direito noh int\n");
+            // no_dir, no e filho são nos internos
+            strcpy(filho.chaves[filho.nchaves], no.chaves[kChave+1]);
+            strcpy(no.chaves[kChave +1], no_dir.chaves[0]);
+            
+            filho.nchaves++;
+            filho.filhos[filho.nchaves] = no_dir.filhos[0];
+
+            for(int j = 0; j < no_dir.nchaves-1; j++){
+                strcpy(no_dir.chaves[j], no_dir.chaves[j+1]);
+            }
+            for(int j = 0; j < no_dir.nchaves; j++){
+                no_dir.filhos[j] = no_dir.filhos[j+1];
+            }
+            no_dir.nchaves--;
+            
+            fseek(fp, no.filhos[i], SEEK_SET);
+            fwrite(&filho, sizeof(TABM), 1, fp);
+            fseek(fp, no.filhos[i+1], SEEK_SET);
+            fwrite(&no_esq, sizeof(TABM), 1, fp);
+            fseek(fp, posAtual, SEEK_SET);
+            fwrite(&no, sizeof(TABM), 1, fp);
+            
+            TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
+        }
     } else{ //caso 3B
-
+        printf("CASO 3B\n");
     }
 
 }
@@ -745,7 +823,43 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
 
 
 void TABM_retira(char* nome_indice, char* nomeAtleta){
-    
+    FILE* fp = fopen(nome_indice, "rb+");
+    if(!fp){
+        printf("Erro ao abrir o arquivo indice\n");
+        exit(1);
+    }
+
+    TABM no;
+    fread(&no, sizeof(TABM),1, fp);
+    if(no.nchaves == 0){
+        fclose(fp);
+        return;
+    }
+    if(no.folha == 1){
+        TAtleta* atleta = buscaAtletaFolha(no.chaves[0], nomeAtleta);
+        if(!atleta) return;
+
+        removeAtletaFolha(no.chaves[0], nomeAtleta);
+        no.nchaves--;
+
+        if(no.nchaves > 0 && strcmp(no.chaves[0], nomeAtleta) == 0){
+            liberaAtleta(atleta);
+            atleta = buscaAtletaNFolha(no.chaves[0], 0);
+            rename(no.chaves[0], atleta->nome);
+            strcpy(no.chaves[0], atleta->nome);
+        }
+
+        fseek(fp, 0L, SEEK_SET);
+        fwrite(&no, sizeof(TABM), 1, fp);
+
+        liberaAtleta(atleta);
+        fclose(fp);
+        return;
+    } else{
+        TABM_retira_aux(fp, 0, nomeAtleta);
+    }
+    fclose(fp);
+    return;
 }
 
 
