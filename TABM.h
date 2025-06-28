@@ -815,7 +815,108 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* nomeAtleta) {
             TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
         }
     } else{ //caso 3B
-        printf("CASO 3B\n");
+        if(filho.folha ==1){
+            if(temEsq){
+                printf("CASO 3B folha esq\n");
+
+                
+            } else{
+                printf("CASO 3B folha dir\n");
+
+            }
+        } else{
+            if(temEsq){
+                printf("CASO 3B interno esq\n");
+                strcpy(no_esq.chaves[no_esq.nchaves], no.chaves[kChave]);
+                //tem q aumentar ncahves de no_esq
+                no_esq.nchaves++;
+                for(int j = 0; j < filho.nchaves; j++){
+                    strcpy(no_esq.chaves[no_esq.nchaves + j], filho.chaves[j]);
+                }
+                for(int j = 0; j <= filho.nchaves; j++){
+                    no_esq.filhos[no_esq.nchaves + j] = filho.filhos[j];
+                }
+                filho.folha = -1;
+                no_esq.nchaves += filho.nchaves;
+                if(no.nchaves <= 1){
+                    no.folha = -1;
+                    //escrever no_esq no lugar de no
+                    fseek(fp, posAtual, SEEK_SET);
+                    fwrite(&no_esq, sizeof(TABM), 1, fp);
+                    fseek(fp, no.filhos[i], SEEK_SET);
+                    fwrite(&filho, sizeof(TABM), 1, fp);
+                    fseek(fp, no.filhos[i-1], SEEK_SET);
+                    fwrite(&no, sizeof(TABM), 1, fp);
+                    TABM_retira_aux(fp, posAtual, nomeAtleta);
+                    return;
+                }
+
+
+
+                fseek(fp, no.filhos[i], SEEK_SET);
+                fwrite(&filho, sizeof(TABM), 1, fp);
+                fseek(fp, no.filhos[i+1], SEEK_SET);
+                fwrite(&no_esq, sizeof(TABM), 1, fp);
+
+                for(int j = kChave; j < no.nchaves; j++){
+                    strcpy(no.chaves[j], no.chaves[j+1]);
+                }
+                for(int j = i; j <= no.nchaves; j++){
+                    no.filhos[j] = no.filhos[j+1];
+                }
+                no.nchaves--;
+
+                fseek(fp, posAtual, SEEK_SET);
+                fwrite(&no, sizeof(TABM), 1, fp);
+                
+                //recursão agora é no nó_esq
+                TABM_retira_aux(fp, no.filhos[i-1], nomeAtleta);
+            } else {
+                printf("CASO 3B interno dir\n");
+                strcpy(filho.chaves[filho.nchaves], no.chaves[kChave]);
+                //tem q aumentar ncahves de filho
+                filho.nchaves++;
+                for(int j = 0; j < no_dir.nchaves; j++){
+                    strcpy(filho.chaves[filho.nchaves + j], no_dir.chaves[j]);
+                }
+                for(int j = 0; j <= no_dir.nchaves; j++){
+                    filho.filhos[filho.nchaves + j] = no_dir.filhos[j];
+                }
+                no_dir.folha = -1;
+                filho.nchaves += no_dir.nchaves;
+                if(no.nchaves <= 1){
+                    no.folha = -1;
+                    //escrever filho no lugar de no
+                    fseek(fp, posAtual, SEEK_SET);
+                    fwrite(&filho, sizeof(TABM), 1, fp);
+                    fseek(fp, no.filhos[i+1], SEEK_SET);
+                    fwrite(&no_dir, sizeof(TABM), 1, fp);
+                    fseek(fp, no.filhos[i], SEEK_SET);
+                    fwrite(&no, sizeof(TABM), 1, fp);
+                    TABM_retira_aux(fp, posAtual, nomeAtleta);
+                    return;
+                }
+                
+                fseek(fp, no.filhos[i], SEEK_SET);
+                fwrite(&filho, sizeof(TABM), 1, fp);
+                fseek(fp, no.filhos[i+1], SEEK_SET);
+                fwrite(&no_esq, sizeof(TABM), 1, fp);
+
+                for(int j = kChave; j < no.nchaves; j++){
+                    strcpy(no.chaves[j], no.chaves[j+1]);
+                }
+                for(int j = i; j <= no.nchaves; j++){
+                    no.filhos[j] = no.filhos[j+1];
+                }
+                no.nchaves--;
+
+                fseek(fp, posAtual, SEEK_SET);
+                fwrite(&no, sizeof(TABM), 1, fp);
+                
+                //recursão ainda é no nó filho
+                TABM_retira_aux(fp, no.filhos[i], nomeAtleta);
+            }
+        }
     }
 
 }

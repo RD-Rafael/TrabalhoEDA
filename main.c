@@ -45,9 +45,6 @@ int main(){
     // TABM_insere("index.bin", "Kiefer");
     // TABM_insere("index.bin", "Escudé");
     
-    if(strcmp("20", "2") > 0) printf("20 maior q 2\n");
-    else printf("20 < 2\n");
-    
 
     
     
