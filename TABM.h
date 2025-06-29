@@ -963,5 +963,39 @@ void TABM_retira(char* nome_indice, char* nomeAtleta){
     return;
 }
 
+TAtleta* TABM_busca(char* nome_indice, char* nomeAtleta){
+    FILE* fp = fopen(nome_indice, "rb");
+    if(!fp){
+        printf("problema ao abrir arquivo indice\n");
+        exit(1);
+    }
+    TABM no;
+    if(fread(&no, sizeof(TABM), 1, fp) != 1 || no.folha == -1 || no.nchaves == 0){
+        printf("Arvore B+ vazia\n");
+        fclose(fp);
+        return NULL;
+    }
+    //raiz não vazia
+    while(no.folha != 1){
+        int i = 0;
+        for(i = 0; i < no.nchaves; i++){
+            if(strcmp(nomeAtleta, no.chaves[i]) < 0) break;
+        }
+        if(no.filhos[i] == -1){
+            printf("Atleta nao encontrado\n");
+            fclose(fp);
+            return NULL;
+        }
+        fseek(fp, no.filhos[i], SEEK_SET);
+        fread(&no, sizeof(TABM), 1, fp);
+    }
+    if(no.folha == 1){
+        TAtleta* atleta = buscaAtletaFolha(no.chaves[0], nomeAtleta);
+        if(atleta != NULL) return atleta;
+    }
+
+    printf("Atleta nao encontrado\n");
+    return NULL;
+}
 
 #endif
