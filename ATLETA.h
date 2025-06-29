@@ -16,7 +16,6 @@ typedef struct _atleta{
     int x; //Experimentando
 } TAtleta;
 
-// Just function declarations (prototypes)
 TAtleta* AtletaInit();
 TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank);
 void liberaAtleta(TAtleta* atleta);
