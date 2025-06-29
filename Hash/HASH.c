@@ -31,8 +31,7 @@ void inicializa_arq_hash_vazio(FILE* arq_hash, int hash_size){
 
 }
 
-
-void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b)){
+void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_func(void* chave), int ord_func(void* a, void* b)){
 
     int hash = hash_func(&atleta);
 
@@ -96,7 +95,6 @@ void HASH_inserir(FILE* arq_hash, TAtleta atleta, int hash_size, int hash_func(v
 
     }
 }
-
 
 void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b)){
 
@@ -165,11 +163,11 @@ void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, i
         if(strcmp(anoRank_buffer, "-") == 0) atleta.anoMelhorRank = -1;
         else atleta.anoMelhorRank = atoi(anoRank_buffer);
 
-        HASH_inserir(arq_hash, atleta, hash_size, hash_func, ord_func);
+        HASH_inserir(arq_hash, atleta, hash_func, ord_func);
 
         i++;
 
-    // if(i >= 10) break;
+    if(i >= 20) break;
 
     }
 
@@ -177,6 +175,103 @@ void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, i
 
     fclose(arq_dados);
     fclose(arq_hash);
+
+}
+
+void HASH_remove(char* nome_arq_hash, TAtleta atleta, int hash_func(void* chave)){
+
+    FILE* arq_hash = fopen(nome_arq_hash, "rb+");
+
+    int hash = hash_func(&atleta);
+
+    Data aux;
+    Data ant;
+    strcpy(ant.nome, "-");
+    ant.prox = INT_MIN;
+
+    fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
+    fread(&aux, sizeof(Data), 1, arq_hash);
+
+    int offset_atual = 0;
+    int offset_ant = 0;
+    while(strcmp(aux.nome, atleta.nome) != 0 && aux.prox != -1 && aux.prox != INT_MIN){
+
+        strcpy(ant.nome, aux.nome);
+        ant.prox = aux.prox;
+
+        offset_ant = offset_atual;
+        offset_atual = aux.prox;
+
+        fseek(arq_hash, offset_atual, SEEK_SET);
+        fread(&aux, sizeof(Data), 1, arq_hash);
+
+
+    }
+
+
+    if(strcmp(aux.nome, atleta.nome) == 0){
+        printf("\nOlha aqui o ant! Nome: %s\n", ant.nome);
+        printf("\nAchei! Nome: %s\n", aux.nome);
+
+        ant.prox = aux.prox;
+        fseek(arq_hash, offset_ant, SEEK_SET);
+        fwrite(&ant, sizeof(Data), 1, arq_hash);
+        printf("Removido\n");
+
+        strcpy(aux.nome, "-");
+        aux.prox = INT_MIN; //Marcando como dado morto
+        fseek(arq_hash, offset_atual, SEEK_SET);
+        fwrite(&aux, sizeof(Data), 1, arq_hash);
+
+        
+        
+
+    }
+    else{
+        printf("\nAtleta não encontrado na tabela %s\n", nome_arq_hash);
+
+    }
+
+    fclose(arq_hash);
+}
+
+void HASH_busca(char* nome_arq_hash, TAtleta atleta, int hash_func(void* chave), char * name){
+
+    FILE* arq_hash = fopen(nome_arq_hash, "rb+");
+
+
+    int hash = hash_func(&atleta);
+
+    Data aux;
+
+    fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
+    fread(&aux, sizeof(Data), 1, arq_hash);
+
+    int offset = 0;
+    while(strcmp(aux.nome, atleta.nome) != 0 && aux.prox != -1 && aux.prox != INT_MIN){
+
+
+        offset = aux.prox;
+
+        fseek(arq_hash, offset, SEEK_SET);
+        fread(&aux, sizeof(Data), 1, arq_hash);
+
+
+    }
+
+
+    if(strcmp(aux.nome, atleta.nome) == 0){
+        printf("\nAchei! Nome: %s\n", aux.nome);
+        strcpy(name, aux.nome);
+    }
+    else{
+        printf("\nAtleta não encontrado na tabela %s\n", nome_arq_hash);
+        strcpy(name, "Not found");
+    }
+
+    fclose(arq_hash);
+
+
 
 }
 
