@@ -155,10 +155,17 @@ int insere_atleta_folha(char* nomeFolha, TAtleta* atleta){
 
 
     if(atletaExistente != NULL){
-        fseek(fp, (posChave*sizeof(TAtleta)) + sizeof(int), SEEK_SET);    
+        posChave = ftell(fp);
+        TAtleta aux;
+        fread(&aux, sizeof(TAtleta),1, fp);
+        while(strcmp(aux.chave, atleta->chave) != 0){
+            posChave = ftell(fp);
+            fread(&aux, sizeof(TAtleta),1, fp);
+        }
+
+        fseek(fp, posChave, SEEK_SET);    
         fwrite(atleta, sizeof(TAtleta), 1, fp);
         
-        nchaves++;
         fseek(fp, 0L, SEEK_SET);
         fwrite(&nchaves, sizeof(int), 1, fp);
         
@@ -299,8 +306,55 @@ void mergeFolha(char* nomeFolhaEsq, char* nomeFolhaDir){
     remove(nomeFolhaDir);
 }
 
+char* nomeFolhaAtleta(char* nome_indice, char* chaveAtleta){
+    //igual o código da função busca, mas retorna o nome da folha ao invés do atleta
+    FILE* fp = fopen(nome_indice, "rb");
+    if(!fp){
+        printf("problema ao abrir arquivo indice\n");
+        exit(1);
+    }
+    TABM no;
+    if(fread(&no, sizeof(TABM), 1, fp) != 1 || no.folha == -1 || no.nchaves == 0){
+        fclose(fp);
+        return NULL;
+    }
+    //raiz não vazia
+    while(no.folha != 1){
+        int i = 0;
+        //Da pra mudar esse for por uma busca binária depois
+        for(i = 0; i < no.nchaves; i++){
+            if(strcmp(chaveAtleta, no.chaves[i]) < 0) break;
+        }
+        if(no.filhos[i] == -1){
+            fclose(fp);
+            return NULL;
+        }
+        fseek(fp, no.filhos[i], SEEK_SET);
+        fread(&no, sizeof(TABM), 1, fp);
+    }
+    fclose(fp);
+    if(no.folha == 1){
+        char* ans = (char*) malloc(sizeof(char)*25);
+        strcpy(ans, no.chaves[0]);
+        return ans;
+    }
+
+    return NULL;
+}
 
 void TABM_insere(char* nome_indice, TAtleta* atleta){
+    
+    //se atleta já existe, apenas atualizar
+    TAtleta* atletaVerif = TABM_busca(nome_indice, atleta->chave);
+    if(atletaVerif != NULL){
+        //futuramente aqui vai atualizar a hash tambem
+        char* nomeFolha = nomeFolhaAtleta(nome_indice, atleta->chave);
+        insere_atleta_folha(nomeFolha, atleta);
+        free(nomeFolha);
+        return;
+    }
+
+
     FILE* fp = fopen(nome_indice, "rb+");
     if(!fp){
         printf("Erro ao abrir o arquivo indice\n");
@@ -356,7 +410,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
             
             liberaAtleta(atletaMediano);
         } else{
-            //insere na folha;
+            //insere na folha, aqui vai adicionar o atleta em todas as hashes
             raiz.nchaves++;
             //verifica se nome vai ser atualizado
             int posChave = pos_novo_no_folha(raiz.chaves[0], atleta->chave);
@@ -832,6 +886,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
                 mergeFolha(noE.chaves[0], noD.chaves[0]);
                 //copiar chaves dos filhos para o pai
                 strcpy(no.chaves[0], noE.chaves[0]);
+                
                 no.folha = 1;
                 no.nchaves = noE.nchaves + noD.nchaves;
 
@@ -1083,7 +1138,6 @@ TAtleta* TABM_busca(char* nome_indice, char* chaveAtleta){
     }
     TABM no;
     if(fread(&no, sizeof(TABM), 1, fp) != 1 || no.folha == -1 || no.nchaves == 0){
-        printf("Arvore B+ vazia\n");
         fclose(fp);
         return NULL;
     }
@@ -1095,18 +1149,17 @@ TAtleta* TABM_busca(char* nome_indice, char* chaveAtleta){
             if(strcmp(chaveAtleta, no.chaves[i]) < 0) break;
         }
         if(no.filhos[i] == -1){
-            printf("Atleta nao encontrado\n");
             fclose(fp);
             return NULL;
         }
         fseek(fp, no.filhos[i], SEEK_SET);
         fread(&no, sizeof(TABM), 1, fp);
     }
+    fclose(fp);
     if(no.folha == 1){
         TAtleta* atleta = buscaAtletaFolha(no.chaves[0], chaveAtleta);
         if(atleta != NULL) return atleta;
     }
 
-    printf("Atleta nao encontrado\n");
     return NULL;
 }
