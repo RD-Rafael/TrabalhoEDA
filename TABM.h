@@ -32,6 +32,7 @@ int insere_atleta_folha(char* nomeFolha, TAtleta* atleta);
 int folha_cheia(char* nomeFolha);
 void removeAtletaFolha(char* nomeFolha, char* chaveAtleta);
 void divideFolha(char * nomeFolha);
+void mergeFolha(char* nomeFolhaEsq, char* nomeFolhaDir);
 void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atleta);
 void TABM_insere(char* nome_indice, TAtleta* atleta);
 void imprimeFolha(char* nomeFolha) ;
