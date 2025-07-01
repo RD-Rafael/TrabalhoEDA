@@ -1,5 +1,17 @@
 #include "TABM.h"
 
+
+void TABM_retira_chave_inicio(TABM* no){
+    for(int i = 0; i < no->nchaves-1; i++){
+        strcpy(no->chaves[i], no->chaves[i+1]);
+    }
+    for(int i = 0; i < no->nchaves; i++){
+        no->filhos[i] = no->filhos[i+1];
+    }
+    no->nchaves--;
+}
+
+
 void TABM_print_no(TABM* no){
     printf("número de chaves: %d\n", no->nchaves);
     for(int i = 0; i < no->nchaves; i++){
@@ -783,11 +795,11 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
         } else{
             printf("CASO 3A esquerdo noh int\n");
             // filho, no e no_esq são nó internos
-            for(int j = filho.nchaves-1; j >=0; j--){
-                strcpy(filho.chaves[j+1], filho.chaves[j]);
+            for(int j = filho.nchaves-1; j >0; j--){
+                strcpy(filho.chaves[j], filho.chaves[j-1]);
             }
-            for(int j = filho.nchaves; j >=0; j--){
-                filho.filhos[j+1] = filho.filhos[j];
+            for(int j = filho.nchaves; j > 0; j--){
+                filho.filhos[j] = filho.filhos[j-1];
             }
             strcpy(filho.chaves[0], no.chaves[kChave]);
             strcpy(no.chaves[kChave], no_esq.chaves[no_esq.nchaves-1]);
@@ -844,13 +856,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             filho.nchaves++;
             filho.filhos[filho.nchaves] = no_dir.filhos[0];
 
-            for(int j = 0; j < no_dir.nchaves-1; j++){
-                strcpy(no_dir.chaves[j], no_dir.chaves[j+1]);
-            }
-            for(int j = 0; j < no_dir.nchaves; j++){
-                no_dir.filhos[j] = no_dir.filhos[j+1];
-            }
-            no_dir.nchaves--;
+            TABM_retira_chave_inicio(&no_dir);
             
             fseek(fp, no.filhos[i], SEEK_SET);
             fwrite(&filho, sizeof(TABM), 1, fp);
@@ -1050,28 +1056,16 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
                 }
                 no_dir.folha = -1;
                 filho.nchaves += no_dir.nchaves;
-                if(no.nchaves <= 1){
-                    no.folha = -1;
-                    //escrever filho no lugar de no
-                    fseek(fp, posAtual, SEEK_SET);
-                    fwrite(&filho, sizeof(TABM), 1, fp);
-                    fseek(fp, no.filhos[i+1], SEEK_SET);
-                    fwrite(&no_dir, sizeof(TABM), 1, fp);
-                    fseek(fp, no.filhos[i], SEEK_SET);
-                    fwrite(&no, sizeof(TABM), 1, fp);
-                    TABM_retira_aux(fp, posAtual, chaveAtleta);
-                    return;
-                }
                 
                 fseek(fp, no.filhos[i], SEEK_SET);
                 fwrite(&filho, sizeof(TABM), 1, fp);
                 fseek(fp, no.filhos[i+1], SEEK_SET);
-                fwrite(&no_esq, sizeof(TABM), 1, fp);
+                fwrite(&no_dir, sizeof(TABM), 1, fp);
 
-                for(int j = kChave; j < no.nchaves; j++){
+                for(int j = kChave; j < no.nchaves - 1; j++){
                     strcpy(no.chaves[j], no.chaves[j+1]);
                 }
-                for(int j = i; j <= no.nchaves; j++){
+                for(int j = i+1; j < no.nchaves; j++){
                     no.filhos[j] = no.filhos[j+1];
                 }
                 no.nchaves--;

@@ -19,6 +19,7 @@ typedef struct no_arvbm{
 } TABM;
 
 
+void TABM_retira_chave_inicio(TABM* no);
 char* nomeFolhaAtleta(char* nome_indice, char* chaveAtleta);
 void TABM_print_no(TABM* no);
 int TABM_ppl(FILE* fp);
