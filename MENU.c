@@ -154,7 +154,7 @@ void MENU_buscar_atleta(){
     if(atleta != NULL){
         printf("Nome: %s\n", atleta->nome);
         printf("Ano de nascimento: %d\n", atleta->anoNascimento);
-        if(atleta->anoMorte != -1) printf("Ano de moret: %d\n", atleta->anoMorte);
+        if(atleta->anoMorte != -1) printf("Ano de morte: %d\n", atleta->anoMorte);
         printf("Nacionalidade: %s\n", atleta->nacionalidade);
         if(atleta->rank != -1){
             printf("Melhor rank: %d\n", atleta->rank);
