@@ -18,6 +18,7 @@ typedef struct no_arvbm{
     int prox;
 } TABM;
 
+void TABM_leitura_arq(char* nomeArq, char* nomeIdx);
 
 void TABM_retira_chave_inicio(TABM* no);
 char* nomeFolhaAtleta(char* nome_indice, char* chaveAtleta);

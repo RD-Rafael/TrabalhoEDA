@@ -1,5 +1,84 @@
 #include "TABM.h"
 
+void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
+    TABM_inicializa(nomeIdx);
+    FILE* fp = fopen(nomeArq, "r");
+
+    char ch;
+    ch = fgetc(fp);
+    while(!feof(fp) && ch != '\n') ch = fgetc(fp);
+    if(feof(fp)){
+        fclose(fp);
+        return;
+    }
+
+    while(!feof(fp)){
+        char nome[25], nationality[20];
+        int birth, death = -1, bestRank = -1, bestRankYear = -1, weeksTop1 = -1;
+        int i = 0;
+        ch = fgetc(fp);
+        if(feof(fp)){
+            fclose(fp);
+            return;
+        }
+
+        while(!feof(fp) && ch != '\\'){
+            nome[i] = ch;
+            ch = fgetc(fp);
+            i++;
+        }
+        if(feof(fp)){
+            printf("eof no momento errado\n");
+            exit(1);
+        }
+        nome[i] = '\0';
+
+        fscanf(fp, "%d\\", &birth);
+        int auxPos = ftell(fp);
+        ch = fgetc(fp);
+        if(ch != '-'){
+            fseek(fp, auxPos, SEEK_SET);
+            fscanf(fp, "%d\\", &death);
+        } else ch = fgetc(fp);
+
+        i = 0;
+        ch = fgetc(fp);
+        while(!feof(fp) && ch != '\\'){
+            nationality[i] = ch;
+            ch = fgetc(fp);
+            i++;
+        }
+        if(feof(fp)){
+            printf("eof no momento errado\n");
+            exit(1);
+        }
+        nationality[i] = '\0';
+
+
+        auxPos = ftell(fp);
+        ch = fgetc(fp);
+        if(ch != '-'){
+            fseek(fp, auxPos, SEEK_SET);
+            fscanf(fp, "%d\\%d", &bestRank, &bestRankYear);
+            ch = fgetc(fp);
+            while(!feof(fp) && ch != '\n'){
+                if(ch == '('){
+                    fscanf(fp, "%d", &weeksTop1);
+                    break;
+                }
+                ch = fgetc(fp);
+            }
+        }
+        TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear);
+        TABM_insere(nomeIdx, atleta);
+        liberaAtleta(atleta);
+
+        imprimeTABM("index.bin");
+
+        while(ch != '\n') ch = fgetc(fp);
+    }
+}
+
 
 void TABM_retira_chave_inicio(TABM* no){
     for(int i = 0; i < no->nchaves-1; i++){
