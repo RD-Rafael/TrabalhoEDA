@@ -15,18 +15,20 @@ TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionali
 
     //Pegar o último sobrenome para a chave
 
+    // codigo para pegar a posição do ultimo sobrenome (tem pessoas com o mesmo último sobrenome)
+    // int inicioSobrenome = 0;
+    // int aux = -1;
+    // for(int i = 0; i < 35; i++){
+    //     if(nome[i] == '\0') break;
+    //     else if(nome[i] == ' '){
+    //         aux = i;
+    //     } else{
+    //         inicioSobrenome = aux+1;
+    //     }
+    // }
+    // strcpy(atleta->chave, &nome[inicioSobrenome]);
 
-    int inicioSobrenome = 0;
-    int aux = -1;
-    for(int i = 0; i < 25; i++){
-        if(nome[i] == '\0') break;
-        else if(nome[i] == ' '){
-            aux = i;
-        } else{
-            inicioSobrenome = aux+1;
-        }
-    }
-    strcpy(atleta->chave, &nome[inicioSobrenome]);
+    strcpy(atleta->chave, nome);
 
 
 

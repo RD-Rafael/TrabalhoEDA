@@ -9,22 +9,25 @@
 #include <string.h>
 #include "ATLETA.h"
 
-#define T 2
+#define T 4
 typedef struct no_arvbm{
     int nchaves;
-    char chaves[(T*2)-1][25];
+    char chaves[(T*2)-1][35];
     int folha;
     int filhos[T*2];
     int prox;
 } TABM;
 
+int TABM_no_count(char* nomeIdx);
+
 void TABM_leitura_arq(char* nomeArq, char* nomeIdx);
+void TABM_destruir_arq(char* nomeArq, char* nomeIdx);
 
 void TABM_retira_chave_inicio(TABM* no);
 char* nomeFolhaAtleta(char* nome_indice, char* chaveAtleta);
 void TABM_print_no(TABM* no);
 int TABM_ppl(FILE* fp);
-int pos_novo_no_int(char chaves[T][25], int nchaves, char* nome_no);
+int pos_novo_no_int(char chaves[T][35], int nchaves, char* nome_no);
 int pos_novo_no_folha(char* nomeFolha, char* chaveAtleta);
 int nchaves_em_folha(char* nomeFolha);
 void inicializar_folha(char* nomeFolha);

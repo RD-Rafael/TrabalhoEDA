@@ -10,7 +10,7 @@
 */
 
 typedef struct data{
-    char nome[25];
+    char nome[35];
     int prox;
 }Data;
 

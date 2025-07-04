@@ -1,50 +1,35 @@
 #include "TABM.h"
 #include "MENU.h"
+#include <sys/stat.h>
+#include <sys/types.h>
 
 
 int main(){
-    TABM_inicializa("index.bin");
-    // strcpy(atleta->nome, "Chardy");
-    // TABM_insere("index.bin", atleta);
-    // strcpy(atleta->nome, "Cuevas");
-    // TABM_insere("index.bin", atleta);
-    // strcpy(atleta->nome, "Olgopolov");
-    // TABM_insere("index.bin", atleta);
-    // strcpy(atleta->nome, "Djokovic");
-    // TABM_insere("index.bin", atleta);
-    // strcpy(atleta->nome, "Koubek");
-    // TABM_insere("index.bin", atleta);
-    // strcpy(atleta->nome, "Mirnyi");
-    // TABM_insere("index.bin", atleta);
-    //     strcpy(atleta->nome, "Escude");
-    // TABM_insere("index.bin", atleta);
-    //     strcpy(atleta->nome, "Kiefer");
-    // TABM_insere("index.bin", atleta);
-    //     strcpy(atleta->nome, "Clement");
-    // TABM_insere("index.bin", atleta);
-    // imprimeTABM("index.bin");
-    // TABM_retira("index.bin", "Djokovic");
-    // imprimeTABM("index.bin");
-    // TABM_retira("index.bin", "Cuevas");
-    // imprimeTABM("index.bin");
-    TABM_leitura_arq("tennis_players.txt", "index.bin");
-    imprimeTABM("index.bin");
+    mkdir("BMFiles", 0777);
+    TABM_inicializa("BMFiles/index.bin");
+    TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
     
-    char ch[25];
+    imprimeTABM("BMFiles/index.bin");
+    
+    TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
+    printf("%d\n", TABM_no_count("BMFiles/index.bin"));
+
+
+    char ch[35];
     while(1){
         int i = 0;
         ch[i] = getchar();
         if(ch[0] == '\n') break;
-        while(ch[i] != '\n' && i < 25){
+        while(ch[i] != '\n' && i < 35){
             i++;
             ch[i] = getchar();
         }
         ch[i] = '\0';
         TAtleta* atleta = novoAtleta(ch, 0, 0, "Brazil", 0, 0);
-        TABM_insere("index.bin", atleta);
+        TABM_insere("BMFiles/index.bin", atleta);
         liberaAtleta(atleta);
 
-        imprimeTABM("index.bin");
+        imprimeTABM("BMFiles/index.bin");
     }
 
 
@@ -52,12 +37,12 @@ int main(){
         int i = 0;
         ch[i] = getchar();
         if(ch[0] == '\n') break;
-        while(ch[i] != '\n' && i < 25){
+        while(ch[i] != '\n' && i < 35){
             i++;
             ch[i] = getchar();
         }
         ch[i] = '\0';
-        TAtleta* atleta = TABM_busca("index.bin", ch);
+        TAtleta* atleta = TABM_busca("BMFiles/index.bin", ch);
         if(atleta != NULL){
             printf("%s\n", atleta->nome);
             liberaAtleta(atleta);
@@ -68,13 +53,14 @@ int main(){
         int i = 0;
         ch[i] = getchar();
         if(ch[0] == '\n') break;
-        while(ch[i] != '\n' && i < 25){
+        while(ch[i] != '\n' && i < 35){
             i++;
             ch[i] = getchar();
         }
         ch[i] = '\0';
-        TABM_retira("index.bin", ch);
-        imprimeTABM("index.bin");
+        TABM_retira("BMFiles/index.bin", ch);
+        imprimeTABM("BMFiles/index.bin");
+        printf("%d", TABM_no_count("BMFiles/index.bin"));
     }
     
 

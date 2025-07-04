@@ -1,4 +1,53 @@
 #include "TABM.h"
+#include <stdio.h>
+#include <string.h>
+
+void caminho_folha(char* buffer, const char* nomeFolha) {
+    sprintf(buffer, "BMFiles/%s", nomeFolha);
+}
+
+void renameFolha(char* nomeFolha, char* novoNomeFolha){
+    char caminho[256], caminhoNovo[256];
+    caminho_folha(caminho, nomeFolha);
+    caminho_folha(caminhoNovo, novoNomeFolha);
+    rename(caminho, caminhoNovo);
+}
+
+void removeFolha(char* nomeFolha){
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    remove(caminho);
+}
+
+void TABM_no_count_aux(FILE* fp, int* count, int posAtual){
+    fseek(fp, posAtual, SEEK_SET);
+    TABM no;
+    fread(&no, sizeof(TABM), 1, fp);
+    if(no.folha){
+        (*count) += no.nchaves;
+        return;
+    }
+    for(int i = 0; i <= no.nchaves; i++){
+        TABM_no_count_aux(fp, count, no.filhos[i]);
+    }
+}
+
+int TABM_no_count(char* nomeIdx){
+    int count = 0;
+    FILE* fp = fopen(nomeIdx, "rb");
+    if(!fp){
+        printf("Nao foi possivel abrir arquivo indice");
+        fclose(fp);
+        return -1;
+    }
+    TABM no;
+    fread(&no, sizeof(TABM), 1, fp);
+    if(feof(fp)) return 0;
+    if(no.folha == 1) return no.nchaves;
+    TABM_no_count_aux(fp, &count, 0);
+    fclose(fp);
+    return count;
+}
 
 void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
     TABM_inicializa(nomeIdx);
@@ -13,7 +62,87 @@ void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
     }
 
     while(!feof(fp)){
-        char nome[25], nationality[20];
+        char nome[35], nationality[20];
+        int birth, death = -1, bestRank = -1, bestRankYear = -1, weeksTop1 = -1;
+        int i = 0;
+
+        ch = fgetc(fp);
+        if(feof(fp)){
+            fclose(fp);
+            return;
+        }
+
+        while(!feof(fp) && ch != '\\'){
+            nome[i] = ch;
+            ch = fgetc(fp);
+            i++;
+        }
+        if(feof(fp)){
+            printf("eof no momento errado\n");
+            exit(1);
+        }
+        nome[i] = '\0';
+
+        fscanf(fp, "%d\\", &birth);
+        int auxPos = ftell(fp);
+        ch = fgetc(fp);
+        if(ch != '-'){
+            fseek(fp, auxPos, SEEK_SET);
+            fscanf(fp, "%d\\", &death);
+        } else ch = fgetc(fp);
+
+        i = 0;
+        ch = fgetc(fp);
+        while(!feof(fp) && ch != '\\'){
+            nationality[i] = ch;
+            ch = fgetc(fp);
+            i++;
+        }
+        if(feof(fp)){
+            printf("eof no momento errado\n");
+            exit(1);
+        }
+        nationality[i] = '\0';
+
+
+        auxPos = ftell(fp);
+        ch = fgetc(fp);
+        if(ch != '-'){
+            fseek(fp, auxPos, SEEK_SET);
+            fscanf(fp, "%d\\%d", &bestRank, &bestRankYear);
+            ch = fgetc(fp);
+            while(!feof(fp) && ch != '\n'){
+                if(ch == '('){
+                    fscanf(fp, "%d", &weeksTop1);
+                    break;
+                }
+                ch = fgetc(fp);
+            }
+        }
+        TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear);
+        TABM_insere(nomeIdx, atleta);
+        //printf("\nInserido: %s count: %d\n", atleta->nome, TABM_no_count(nomeIdx));
+        
+        liberaAtleta(atleta);
+
+        while(ch != '\n') ch = fgetc(fp);
+    }
+    fclose(fp);
+}
+
+void TABM_destruir_arq(char* nomeArq, char* nomeIdx){
+    FILE* fp = fopen(nomeArq, "r");
+
+    char ch;
+    ch = fgetc(fp);
+    while(!feof(fp) && ch != '\n') ch = fgetc(fp);
+    if(feof(fp)){
+        fclose(fp);
+        return;
+    }
+
+    while(!feof(fp)){
+        char nome[35], nationality[20];
         int birth, death = -1, bestRank = -1, bestRankYear = -1, weeksTop1 = -1;
         int i = 0;
         ch = fgetc(fp);
@@ -70,13 +199,14 @@ void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
             }
         }
         TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear);
-        TABM_insere(nomeIdx, atleta);
+        TABM_retira(nomeIdx, atleta->chave);
+        
         liberaAtleta(atleta);
 
-        imprimeTABM("index.bin");
 
         while(ch != '\n') ch = fgetc(fp);
     }
+    fclose(fp);
 }
 
 
@@ -120,7 +250,7 @@ int TABM_ppl(FILE* fp){
 
 
 
-int pos_novo_no_int(char chaves[T][25], int nchaves, char* nome_no){
+int pos_novo_no_int(char chaves[T][35], int nchaves, char* nome_no){
     if(nchaves == 0) return 0;
     if(nchaves == 1){
         if(strcmp(chaves[0], nome_no) >= 0) return 0;
@@ -134,9 +264,12 @@ int pos_novo_no_int(char chaves[T][25], int nchaves, char* nome_no){
 }
 
 int pos_novo_no_folha(char* nomeFolha, char* chaveAtleta){
-    FILE* fp = fopen(nomeFolha, "rb");
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb");
+    
     if(!fp){
-        printf("Erro ao abrir arquivo folha %s\n", nomeFolha);
+        printf("Erro ao abrir arquivo folha1 %s\n", nomeFolha);
         exit(1);
     }
     int nchaves;
@@ -164,9 +297,12 @@ int pos_novo_no_folha(char* nomeFolha, char* chaveAtleta){
 }
 
 int nchaves_em_folha(char* nomeFolha){
-    FILE* fp = fopen(nomeFolha, "rb");
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb");
+
     if(!fp){
-        printf("Erro ao abrir arquivo folha %s\n", nomeFolha);
+        printf("Erro ao abrir arquivo folha2 %s\n", nomeFolha);
         exit(1);
     }
     int nchaves;
@@ -176,7 +312,10 @@ int nchaves_em_folha(char* nomeFolha){
 }
 
 void inicializar_folha(char* nomeFolha){
-    FILE* fp = fopen(nomeFolha, "wb");
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "wb");
+    
     if(!fp){
         printf("Erro ao criar arquivo folha %s", nomeFolha);
         exit(1);
@@ -189,13 +328,20 @@ void inicializar_folha(char* nomeFolha){
 TAtleta* buscaAtletaFolha(char* nomeFolha, char* chaveAtleta){
     TAtleta atleta;
     int nchaves;
-    FILE* fp = fopen(nomeFolha, "rb");
+
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb");
+    
     if(!fp){
-        printf("Erro ao abrir arquivo folha %s\n", nomeFolha);
+        printf("Erro ao abrir arquivo folha3 %s\n", nomeFolha);
         exit(1);
     }
     fread(&nchaves, sizeof(int), 1, fp);
-    if(nchaves == 0) return NULL;
+    if(nchaves == 0){
+        fclose(fp);
+        return NULL;
+    }
     TAtleta* ans = AtletaInit();
     for(int i = 0; i < nchaves; i++){
         fread(&atleta, sizeof(TAtleta), 1, fp);
@@ -210,14 +356,19 @@ TAtleta* buscaAtletaFolha(char* nomeFolha, char* chaveAtleta){
             );
         }
     }
+    fclose(fp);
     return ans;
 }
 
 TAtleta* buscaAtletaNFolha(char* nomeFolha, int n){ // retorna o atleta com indice n na folha
     int nchaves;
-    FILE* fp = fopen(nomeFolha, "rb");
+
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb");
+
     if(!fp){
-        printf("Erro ao abrir arquivo folha %s\n", nomeFolha);
+        printf("Erro ao abrir arquivo folha4 %s\n", nomeFolha);
         exit(1);
     }
     fread(&nchaves, sizeof(int), 1, fp);
@@ -235,9 +386,13 @@ TAtleta* buscaAtletaNFolha(char* nomeFolha, int n){ // retorna o atleta com indi
 int insere_atleta_folha(char* nomeFolha, TAtleta* atleta){
     TAtleta* atletaExistente = buscaAtletaFolha(nomeFolha, atleta->chave);
     int posChave = pos_novo_no_folha(nomeFolha, atleta->chave);
-    FILE* fp = fopen(nomeFolha, "rb+");
+    
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb+");
+    
     if(!fp){
-        printf("Erro ao abrir arquivo folha %s\n", nomeFolha);
+        printf("Erro ao abrir arquivo folha5 %s\n", nomeFolha);
         exit(1);
     }
 
@@ -310,7 +465,10 @@ int folha_cheia(char* nomeFolha){
 
 void removeAtletaFolha(char* nomeFolha, char* chaveAtleta){
     //função assume que atleta existe na folha
-    FILE* fp = fopen(nomeFolha, "rb+");
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb+");
+    
     int nchaves;
     fread(&nchaves, sizeof(int), 1, fp);
     if(nchaves == 0) {
@@ -368,10 +526,16 @@ void divideFolha(char * nomeFolha){
 
 void mergeFolha(char* nomeFolhaEsq, char* nomeFolhaDir){
     //transfere atletas da folha direita para a folha esquerda e deleta a folha direita
-    FILE *fpE = fopen(nomeFolhaEsq, "rb+"), *fpD = fopen(nomeFolhaDir, "rb+");
+    char caminhoE[256];
+    caminho_folha(caminhoE, nomeFolhaEsq);
+    
+    char caminhoD[256];
+    caminho_folha(caminhoD, nomeFolhaDir);
+
+    FILE *fpE = fopen(caminhoE, "rb+"), *fpD = fopen(caminhoD, "rb+");
     if(!fpE || !fpD){
-        if(!fpE) printf("Erro ao abrir arquivo folha %s", nomeFolhaEsq);
-        if(!fpD) printf("Erro ao abrir arquivo folha %s", nomeFolhaDir);
+        if(!fpE) printf("Erro ao abrir arquivo folha6 %s", nomeFolhaEsq);
+        if(!fpD) printf("Erro ao abrir arquivo folha7 %s", nomeFolhaDir);
         exit(1);
     }
 
@@ -394,7 +558,7 @@ void mergeFolha(char* nomeFolhaEsq, char* nomeFolhaDir){
     fclose(fpE);
     fclose(fpD);
 
-    remove(nomeFolhaDir);
+    removeFolha(nomeFolhaDir);
 }
 
 char* nomeFolhaAtleta(char* nome_indice, char* chaveAtleta){
@@ -425,7 +589,7 @@ char* nomeFolhaAtleta(char* nome_indice, char* chaveAtleta){
     }
     fclose(fp);
     if(no.folha == 1){
-        char* ans = (char*) malloc(sizeof(char)*25);
+        char* ans = (char*) malloc(sizeof(char)*35);
         strcpy(ans, no.chaves[0]);
         return ans;
     }
@@ -507,7 +671,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
             int posChave = pos_novo_no_folha(raiz.chaves[0], atleta->chave);
 
             if(posChave == 0 && strcmp(atleta->chave, raiz.chaves[0])!= 0){
-                rename(raiz.chaves[0], atleta->chave);
+                renameFolha(raiz.chaves[0], atleta->chave);
                 strcpy(raiz.chaves[0], atleta->chave);
             }
             insere_atleta_folha(raiz.chaves[0], atleta);
@@ -612,14 +776,14 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
 
             if(strcmp(atleta->chave, pai.chaves[posPai]) >= 0){
                 if(strcmp(dir.chaves[0], atleta->chave) > 0){
+                    renameFolha(dir.chaves[0], atleta->chave);
                     strcpy(dir.chaves[0], atleta->chave);
-                    rename(dir.chaves[0], atleta->chave);
                 }
                 insere_atleta_folha(dir.chaves[0], atleta);
                 dir.nchaves++;
             } else{
                 if(strcmp(noAtual.chaves[0], atleta->chave) > 0){
-                    rename(noAtual.chaves[0], atleta->chave);
+                    renameFolha(noAtual.chaves[0], atleta->chave);
                     strcpy(noAtual.chaves[0], atleta->chave);
                 }
                 insere_atleta_folha(noAtual.chaves[0], atleta);
@@ -643,9 +807,10 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
 
             fclose(fp);
             liberaAtleta(atletaMediano);
+            return;
         } else{
             if(strcmp(noAtual.chaves[0], atleta->chave) > 0){
-                rename(noAtual.chaves[0], atleta->chave);
+                renameFolha(noAtual.chaves[0], atleta->chave);
                 strcpy(noAtual.chaves[0], atleta->chave);
             }
             insere_atleta_folha(noAtual.chaves[0], atleta);
@@ -728,9 +893,13 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
 
 void imprimeFolha(char* nomeFolha) {
     int nchaves;
-    FILE* fp = fopen(nomeFolha, "rb");
+
+    char caminho[256];
+    caminho_folha(caminho, nomeFolha);
+    FILE* fp = fopen(caminho, "rb");
+    
     if (!fp) {
-        printf("Erro ao abrir arquivo folha\n");
+        printf("Erro ao abrir arquivo folha8\n");
         exit(1);
     }
     fread(&nchaves, sizeof(int), 1, fp);
@@ -805,7 +974,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             no.nchaves--;
             if(no.nchaves >0){
                 atleta = buscaAtletaNFolha(no.chaves[0], 0);
-                rename(no.chaves[0], atleta->chave);
+                renameFolha(no.chaves[0], atleta->chave);
                 strcpy(no.chaves[0], atleta->chave);
             }
 
@@ -857,7 +1026,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             insere_atleta_folha(filho.chaves[0], atletaEmprestado);
             filho.nchaves++;
 
-            rename(filho.chaves[0], atletaEmprestado->chave);
+            renameFolha(filho.chaves[0], atletaEmprestado->chave);
             strcpy(filho.chaves[0], atletaEmprestado->chave);
 
             strcpy(no.chaves[kChave], atletaEmprestado->chave);
@@ -910,7 +1079,8 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             liberaAtleta(atletaEmprestado);
 
             TAtleta* novoPrimAtletadir = buscaAtletaNFolha(no_dir.chaves[0], 0);
-            rename(no_dir.chaves[0], novoPrimAtletadir->chave);
+
+            renameFolha(no_dir.chaves[0], novoPrimAtletadir->chave);
             strcpy(no_dir.chaves[0], novoPrimAtletadir->chave);
 
             strcpy(no.chaves[kChaveDir], novoPrimAtletadir->chave);
@@ -1177,7 +1347,7 @@ void TABM_retira(char* nome_indice, char* chaveAtleta){
         if(no.nchaves > 0 && strcmp(no.chaves[0], chaveAtleta) == 0){
             liberaAtleta(atleta);
             atleta = buscaAtletaNFolha(no.chaves[0], 0);
-            rename(no.chaves[0], atleta->chave);
+            renameFolha(no.chaves[0], atleta->chave);
             strcpy(no.chaves[0], atleta->chave);
         }
 

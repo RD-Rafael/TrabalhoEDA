@@ -5,8 +5,8 @@
 #ifndef ATLETA_H
 #define ATLETA_H
 typedef struct _atleta{
-    char chave[25];
-    char nome[25];
+    char chave[35];
+    char nome[35];
     int anoNascimento;
     int anoMorte; // -1 significa que está vivo
     char nacionalidade[20];
