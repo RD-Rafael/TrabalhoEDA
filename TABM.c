@@ -124,6 +124,7 @@ void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
         //printf("\nInserido: %s count: %d\n", atleta->nome, TABM_no_count(nomeIdx));
         
         liberaAtleta(atleta);
+        atleta = NULL;
 
         while(ch != '\n') ch = fgetc(fp);
     }
@@ -202,6 +203,7 @@ void TABM_destruir_arq(char* nomeArq, char* nomeIdx){
         TABM_retira(nomeIdx, atleta->chave);
         
         liberaAtleta(atleta);
+        atleta = NULL;
 
 
         while(ch != '\n') ch = fgetc(fp);
@@ -245,6 +247,7 @@ int TABM_ppl(FILE* fp){
         pos = ftell(fp);
     }
     free(no);
+    no = NULL;
     return pos;
 }
 
@@ -274,7 +277,10 @@ int pos_novo_no_folha(char* nomeFolha, char* chaveAtleta){
     }
     int nchaves;
     fread(&nchaves, sizeof(int), 1, fp);
-    if(nchaves == 0) return 0;
+    if(nchaves == 0){
+        fclose(fp);
+        return 0;
+    }
     TAtleta atleta;
     fread(&atleta, sizeof(TAtleta), 1, fp);
     if(nchaves == 1){
@@ -282,7 +288,10 @@ int pos_novo_no_folha(char* nomeFolha, char* chaveAtleta){
         if(strcmp(atleta.chave, chaveAtleta) >= 0) return 0;
         else return 1;
     }
-    if(strcmp(atleta.chave, chaveAtleta) >= 0) return 0;
+    if(strcmp(atleta.chave, chaveAtleta) >= 0){
+        fclose(fp);
+        return 0;
+    }
     TAtleta atleta2;
     for(int i = 0; i < nchaves -1; i++){
         fread(&atleta2, sizeof(TAtleta), 1, fp);
@@ -417,6 +426,7 @@ int insere_atleta_folha(char* nomeFolha, TAtleta* atleta){
         fwrite(&nchaves, sizeof(int), 1, fp);
         
         liberaAtleta(atletaExistente);
+        atletaExistente = NULL;
         fclose(fp);
         return nchaves;
     }
@@ -443,8 +453,8 @@ int insere_atleta_folha(char* nomeFolha, TAtleta* atleta){
     //liberar allocs
     for(int i = 0; i < nchaves-posChave; i++) liberaAtleta(atletasAFrente[i]);
     if(atletasAFrente) free(atletasAFrente);
+    atletasAFrente = NULL;
 
-    
     //atualizar nchaves
     nchaves++;
     fseek(fp, 0L, SEEK_SET);
@@ -509,7 +519,9 @@ void removeAtletaFolha(char* nomeFolha, char* chaveAtleta){
 
     for(int l = 0; l < k; l++) liberaAtleta(atletas[l]);
     if(atletas) free(atletas);
+    atletas = NULL;
     liberaAtleta(atleta);
+    atleta = NULL;
     fclose(fp);
 }
 
@@ -522,8 +534,10 @@ void divideFolha(char * nomeFolha){
         insere_atleta_folha(atletaMediano->chave, atletaAMover);
         removeAtletaFolha(nomeFolha, atletaAMover->chave);
         liberaAtleta(atletaAMover);
+        atletaAMover = NULL;
     }
     liberaAtleta(atletaMediano);
+    atletaMediano = NULL;
 }
 
 void mergeFolha(char* nomeFolhaEsq, char* nomeFolhaDir){
@@ -551,6 +565,7 @@ void mergeFolha(char* nomeFolhaEsq, char* nomeFolhaDir){
         fread(atletas, sizeof(TAtleta), nchavesD, fpD);
         fwrite(atletas, sizeof(TAtleta), nchavesD, fpE);
         free(atletas);
+        atletas = NULL;
     }
     nchavesE = nchavesE + nchavesD;
     
@@ -608,6 +623,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
         char* nomeFolha = nomeFolhaAtleta(nome_indice, atleta->chave);
         insere_atleta_folha(nomeFolha, atleta);
         free(nomeFolha);
+        nomeFolha = NULL;
         return;
     }
 
@@ -666,6 +682,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
             
             
             liberaAtleta(atletaMediano);
+            atletaMediano = NULL;
         } else{
             //insere na folha, aqui vai adicionar o atleta em todas as hashes
             raiz.nchaves++;
@@ -747,6 +764,7 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
             insere_atleta_folha(noAtual.chaves[0], atleta);
             fclose(fp);
             liberaAtleta(existente);
+            existente = NULL;
             return;
         }
         //verficiar se é completo
@@ -809,6 +827,7 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
 
             fclose(fp);
             liberaAtleta(atletaMediano);
+            atletaMediano = NULL;
             return;
         } else{
             if(strcmp(noAtual.chaves[0], atleta->chave) > 0){
@@ -973,11 +992,13 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
         if(atleta != NULL){ //Caso 1
             removeAtletaFolha(no.chaves[0], chaveAtleta);
             liberaAtleta(atleta);
+            atleta = NULL;
             no.nchaves--;
             if(no.nchaves >0){
                 atleta = buscaAtletaNFolha(no.chaves[0], 0);
                 renameFolha(no.chaves[0], atleta->chave);
                 strcpy(no.chaves[0], atleta->chave);
+                liberaAtleta(atleta);
             }
 
             fseek(fp, posAtual, SEEK_SET);
@@ -1041,6 +1062,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             fwrite(&no, sizeof(TABM), 1, fp);
 
             liberaAtleta(atletaEmprestado);
+            atletaEmprestado = NULL;
             posRecursao = no.filhos[i];
         } else{
             //printf("CASO 3A esquerdo noh int\n");
@@ -1079,6 +1101,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             insere_atleta_folha(filho.chaves[0], atletaEmprestado);
             filho.nchaves++;
             liberaAtleta(atletaEmprestado);
+            atletaEmprestado = NULL;
 
             TAtleta* novoPrimAtletadir = buscaAtletaNFolha(no_dir.chaves[0], 0);
 
@@ -1088,6 +1111,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             strcpy(no.chaves[kChaveDir], novoPrimAtletadir->chave);
 
             liberaAtleta(novoPrimAtletadir);
+            novoPrimAtletadir = NULL;
         
             fseek(fp, no.filhos[i], SEEK_SET);
             fwrite(&filho, sizeof(TABM), 1, fp);
@@ -1357,6 +1381,7 @@ void TABM_retira(char* nome_indice, char* chaveAtleta){
         fwrite(&no, sizeof(TABM), 1, fp);
 
         liberaAtleta(atleta);
+        atleta = NULL;
         fclose(fp);
         return;
     } else{

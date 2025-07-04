@@ -37,6 +37,7 @@ void listaNacionalidades(){
         fgets(nacionalidade, sizeof(nacionalidade), fp);
     }
     printf("\n");
+    fclose(fp);
 }
 
 void MENU_selecionaAcao(){
@@ -132,6 +133,7 @@ void MENU_inserir_atleta(){
     TABM_insere(INDEX_FILE, atleta);
 
     liberaAtleta(atleta);
+    atleta = NULL;
 
     imprimeTABM("BMFiles/index.bin");
 }
@@ -162,6 +164,7 @@ void MENU_buscar_atleta(){
             }
         }
         liberaAtleta(atleta);
+        atleta = NULL;
     } else printf("Atleta nao encontrado\n");
 }
 void MENU_remover_atleta(){
@@ -182,5 +185,6 @@ void MENU_remover_atleta(){
         TABM_retira(INDEX_FILE, atleta->chave);
         printf("Atleta removido\n");
         liberaAtleta(atleta);
+        atleta = NULL;
     } else printf("Atleta nao encontrado\n");
 }
