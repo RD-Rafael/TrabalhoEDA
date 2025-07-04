@@ -119,7 +119,7 @@ void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
                 ch = fgetc(fp);
             }
         }
-        TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear);
+        TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear, weeksTop1);
         TABM_insere(nomeIdx, atleta);
         //printf("\nInserido: %s count: %d\n", atleta->nome, TABM_no_count(nomeIdx));
         
@@ -198,7 +198,7 @@ void TABM_destruir_arq(char* nomeArq, char* nomeIdx){
                 ch = fgetc(fp);
             }
         }
-        TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear);
+        TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear, weeksTop1);
         TABM_retira(nomeIdx, atleta->chave);
         
         liberaAtleta(atleta);
@@ -352,7 +352,8 @@ TAtleta* buscaAtletaFolha(char* nomeFolha, char* chaveAtleta){
                 atleta.anoMorte,
                 atleta.nacionalidade,
                 atleta.rank,
-                atleta.anoMelhorRank
+                atleta.anoMelhorRank,
+                atleta.semanasTop1
             );
         }
     }
@@ -492,7 +493,8 @@ void removeAtletaFolha(char* nomeFolha, char* chaveAtleta){
             atleta->anoMorte,
             atleta->nacionalidade,
             atleta->rank,
-            atleta->anoMelhorRank
+            atleta->anoMelhorRank,
+            atleta->semanasTop1
         );
     }
     fseek(fp, sizeof(int) + i*sizeof(TAtleta), SEEK_SET);
@@ -1018,7 +1020,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
 
     if(no_esq.nchaves > T-1){
         if(no_esq.folha == 1){
-            printf("CASO 3A esquerdo noh folha\n");
+            //printf("CASO 3A esquerdo noh folha\n");
             //filho e no_esq são folhas
             TAtleta* atletaEmprestado = buscaAtletaNFolha(no_esq.chaves[0], no_esq.nchaves-1);
             removeAtletaFolha(no_esq.chaves[0], atletaEmprestado->chave);
@@ -1041,7 +1043,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
             liberaAtleta(atletaEmprestado);
             posRecursao = no.filhos[i];
         } else{
-            printf("CASO 3A esquerdo noh int\n");
+            //printf("CASO 3A esquerdo noh int\n");
             // filho, no e no_esq são nó internos
             for(int j = filho.nchaves; j >0; j--){
                 strcpy(filho.chaves[j], filho.chaves[j-1]);
@@ -1068,7 +1070,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
         }
     } else if(no_dir.nchaves > T-1){
         if(no_dir.folha == 1){
-            printf("CASO 3A direito noh folha\n");
+            //printf("CASO 3A direito noh folha\n");
             //no_dir e filho são folhas
             int kChaveDir = kChave == i? kChave : kChave + 1;
             TAtleta* atletaEmprestado = buscaAtletaNFolha(no_dir.chaves[0], 0);
@@ -1096,7 +1098,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
 
             posRecursao = no.filhos[i];
         } else{
-            printf("CASO 3A direito noh int\n");
+            //printf("CASO 3A direito noh int\n");
             // no_dir, no e filho são nos internos
             int kChaveDir = kChave == i? kChave : kChave + 1;
             strcpy(filho.chaves[filho.nchaves], no.chaves[kChaveDir]);
@@ -1150,7 +1152,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
 
                 posRecursao = posAtual;
             } else if(temEsq){
-                printf("CASO 3B folha esq\n");
+                //printf("CASO 3B folha esq\n");
                 posRecursao = no.filhos[i-1];
                 
                 mergeFolha(no_esq.chaves[0], filho.chaves[0]);
@@ -1177,7 +1179,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
                 fwrite(&no, sizeof(TABM), 1, fp);
 
             } else if(temDir){
-                printf("CASO 3B folha dir\n");
+                //printf("CASO 3B folha dir\n");
                 mergeFolha(filho.chaves[0], no_dir.chaves[0]);
                 filho.nchaves = filho.nchaves + no_dir.nchaves;
                 //liberar posição do filho no arquivo
@@ -1247,7 +1249,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
 
                 posRecursao = posAtual;
             } else if(temEsq){ //no tem mais de uma chave, depois do colapso ele ainda vai existir
-                printf("CASO 3B interno esq\n");
+                //printf("CASO 3B interno esq\n");
                 strcpy(no_esq.chaves[no_esq.nchaves], no.chaves[kChave]);
                 //tem q aumentar ncahves de no_esq
                 no_esq.nchaves++;
@@ -1281,7 +1283,7 @@ void TABM_retira_aux(FILE* fp, long posAtual, char* chaveAtleta) {
                 fwrite(&no, sizeof(TABM), 1, fp);
                 
             } else if(temDir){
-                printf("CASO 3B interno dir\n");
+                //printf("CASO 3B interno dir\n");
                 strcpy(filho.chaves[filho.nchaves], no.chaves[kChave]);
                 //tem q aumentar ncahves de filho
                 filho.nchaves++;

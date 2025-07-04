@@ -4,7 +4,7 @@ TAtleta* AtletaInit(){
     return NULL;
 }
 
-TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank){
+TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank, int semanasTop1){
     TAtleta* atleta = (TAtleta*) malloc(sizeof(TAtleta));
     strcpy(atleta->nome, nome);
     atleta->anoNascimento = anoNascimento;
@@ -12,6 +12,7 @@ TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionali
     strcpy(atleta->nacionalidade, nacionalidade);
     atleta->rank = rank;
     atleta->anoMelhorRank = anoMelhorRank;
+    atleta->semanasTop1 = semanasTop1;
 
     //Pegar o último sobrenome para a chave
 

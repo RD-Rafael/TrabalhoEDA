@@ -14,11 +14,12 @@ typedef struct _atleta{
     //-1 significa que nunca entrou no rank
     int rank;
     int anoMelhorRank;
+    int semanasTop1; // -1 se nunca foi top 1
     int x; //Experimentando
 } TAtleta;
 
 TAtleta* AtletaInit();
-TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank);
+TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank, int semanasTop1);
 void liberaAtleta(TAtleta* atleta);
 
 #endif
