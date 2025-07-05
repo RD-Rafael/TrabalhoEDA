@@ -15,7 +15,6 @@ typedef struct _atleta{
     int rank;
     int anoMelhorRank;
     int semanasTop1; // -1 se nunca foi top 1
-    int x; //Experimentando
 } TAtleta;
 
 TAtleta* AtletaInit();

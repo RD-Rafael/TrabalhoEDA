@@ -27,6 +27,8 @@ TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionali
             inicioSobrenome = aux+1;
         }
     }
+    // if(strcmp(nome, "Carl-Uwe Steeb") == 0) printf("\nAqui: %s\n\n", &nome[inicioSobrenome]);
+
     strcpy(atleta->chave, &nome[inicioSobrenome]);
 
     //strcpy(atleta->chave, nome);

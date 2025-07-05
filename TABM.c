@@ -119,7 +119,10 @@ void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
                 ch = fgetc(fp);
             }
         }
+
         TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear, weeksTop1);
+        if(strcmp(nome, "Carl-Uwe Steeb") == 0) printf("\n%s\n\n", atleta->chave);
+
         TABM_insere(nomeIdx, atleta);
         //printf("\nInserido: %s count: %d\n", atleta->nome, TABM_no_count(nomeIdx));
         
@@ -621,6 +624,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
     if(atletaVerif != NULL){
         //futuramente aqui vai atualizar a hash tambem
         char* nomeFolha = nomeFolhaAtleta(nome_indice, atleta->chave);
+        // if(strcmp(atleta->nome, "Carl-Uwe Steeb") == 0) printf("\n\nAqui %s", nomeFolha);
         insere_atleta_folha(nomeFolha, atleta);
         free(nomeFolha);
         nomeFolha = NULL;
@@ -1390,7 +1394,6 @@ void TABM_retira(char* nome_indice, char* chaveAtleta){
     fclose(fp);
     return;
 }
-
 TAtleta* TABM_busca(char* nome_indice, char* chaveAtleta){
     FILE* fp = fopen(nome_indice, "rb");
     if(!fp){

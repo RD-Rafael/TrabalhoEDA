@@ -1,4 +1,9 @@
 #include "MENU.h"
+#include "TABM.h"
+#include "ATLETA.h"
+#include "./TLSE/TLSE.h"
+#include "./Hash/HASH.h"
+#include <string.h>
 
 char* getNacionalidade(int n){
     FILE* fp = fopen("nationalities.txt", "r");
@@ -67,7 +72,27 @@ void MENU_selecionaAcao(){
             imprimeTABM(INDEX_FILE);
             break;
         case 4:
-            // Chame a função para resolver a questão aqui
+            printf("Qual tarefa deseja executar?\n");
+            printf("(0): Remover todos os atletas de uma nacionalidade\n");
+            printf("(1): Buscar atleta\n");
+            printf("(2): Remover atleta\n");
+            printf("(3): Imprimir árvore\n");
+            printf("(4): Resolver questão\n");
+            printf("(5): Sair\n");
+
+            scanf("%d", &acao);
+    
+            int ch = getchar();
+
+            switch (acao)
+            {
+            case 0:
+                retira_pais();
+                break;
+            
+            default:
+                break;
+            }
             break;
         case 5:
             printf("Saindo...\n");
@@ -187,4 +212,100 @@ void MENU_remover_atleta(){
         liberaAtleta(atleta);
         atleta = NULL;
     } else printf("Atleta nao encontrado\n");
+}
+
+int order(void * a, void* b){
+
+    return strcmp(((TAtleta*)(a))->nome, ((TAtleta*)(b))->nome);
+}
+
+void retira_pais(){
+    HASH_inicializa("./arquivos/tennis_players.txt", "Hash/paises.hash", 38, hash_nacionalidade, order); //Teste
+
+    char pais[40];
+
+    printf("Deseja remover os atletas de qual nacionalidade da base de dados?");
+    scanf("%s", pais);
+
+    TAtleta atleta_temp;
+    strcpy(atleta_temp.nacionalidade, pais);
+    
+    TLSE* lse = HASH_busca("Hash/paises.hash", atleta_temp, hash_nacionalidade);
+    TLSE* old = lse;
+
+
+    while(lse){
+        TAtleta* atleta = TABM_busca("BMFiles/index.bin", lse->info);
+        TABM_retira("BMFiles/index.bin", lse->info);
+        HASH_remove_global(atleta);
+        strcpy(lse->info, atleta->nome);
+        lse = lse->prox;
+    }
+
+    printf("Os seguintes atletas forma deletados da base de dados:\n");
+    TLSE_print(old);
+
+
+    TLSE_free(old);
+
+}
+
+
+void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){
+
+    TLSE* lse = TLSE_inicializa();
+
+    FILE* arq_dados = fopen(nome_arq_dados, "rb");
+
+    char anoMorte_buffer[10];
+    char rank_buffer[10];
+    char anoRank_buffer[10];
+
+    char linha[300];
+
+    int i = 0;
+
+    TAtleta atleta;
+
+    fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
+
+
+    while(fgets(linha, sizeof(linha)/sizeof(linha[0]),arq_dados ) != NULL){
+
+        int qtd_res = sscanf(linha, "%[^\\]\\%d\\%[^\\]\\%[^\\]\\%[^\\]\\%s (%d)",
+               atleta.nome,
+               &atleta.anoNascimento,
+               anoMorte_buffer,
+               atleta.nacionalidade,
+               rank_buffer,
+               anoRank_buffer,
+               &atleta.semanasTop1);
+
+        
+
+       
+        if(qtd_res == 6) atleta.semanasTop1 = -1;
+
+
+        if(strcmp(anoMorte_buffer, "-") == 0) atleta.anoMorte = -1;
+        else atleta.anoMorte = atoi(anoMorte_buffer);
+
+        if(strcmp(rank_buffer, "-") == 0) atleta.rank = -1;
+        else atleta.rank = atoi(rank_buffer);
+
+        if(strcmp(anoRank_buffer, "-") == 0) atleta.anoMelhorRank = -1;
+        else atleta.anoMelhorRank = atoi(anoRank_buffer);
+
+        
+        //Pega o atleta da pilha, associa a chave(sobrenome) e aloca dinamicamente
+        TAtleta* new_atleta = novoAtleta(atleta.nome, atleta.anoNascimento,atleta.anoMorte, atleta.nacionalidade, atleta.rank, atleta.anoMelhorRank, atleta.semanasTop1);
+
+        if(compare_func(new_atleta)){
+            lse = TLSE_insere_inicio(lse, new_atleta);
+        }
+    }
+    fclose(arq_dados);
+
+    TLSE_print(lse);
+    TLSE_free(lse);
 }
