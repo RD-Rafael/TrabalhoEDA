@@ -214,13 +214,8 @@ void MENU_remover_atleta(){
     } else printf("Atleta nao encontrado\n");
 }
 
-int order(void * a, void* b){
-
-    return strcmp(((TAtleta*)(a))->nome, ((TAtleta*)(b))->nome);
-}
 
 void retira_pais(){
-    HASH_inicializa("./arquivos/tennis_players.txt", "Hash/paises.hash", 38, hash_nacionalidade, order); //Teste
 
     char pais[40];
 
