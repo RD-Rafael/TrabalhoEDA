@@ -84,6 +84,9 @@ int hash_nacionalidade(void *chave)
     else return 0;  
 }
 
+int hash_torneio(void *chave){
+    return 1;
+}
 
 Data* new_Data(){
     Data* new = (Data*)malloc(sizeof(Data));
@@ -368,10 +371,10 @@ void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_of
 
         fseek(arq_hash, offset_atual, SEEK_SET);
         fread(aux, register_size, 1, arq_hash);
+        aux_prox = (int*)((char*)aux + prox_offset);
     }
 
     if(strcmp(aux, data) == 0){
-
         if(offset_ant != -1) {
             *ant_prox = *aux_prox;
             fseek(arq_hash, offset_ant, SEEK_SET);
@@ -391,7 +394,7 @@ void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_of
             strcpy(aux, "-");
             *aux_prox = INT_MIN;
             fseek(arq_hash, offset_atual, SEEK_SET);
-            fwrite(&aux, register_size, 1, arq_hash);
+            fwrite(aux, register_size, 1, arq_hash);
         }
 
     }
@@ -404,11 +407,11 @@ void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_of
 
 void HASH_remove_global(void* data){
 
-    printf("Chegou");
-
 
     Hash tabelas_sistema[] = {
     {"Hash/hash_por_nacionalidade.hash", hash_nacionalidade, 40, 36},
+    // {"Hash/hash_por_torneio.hash", hash_torneio, 44, 40}, Retirar daqui faz sentido?
+
 };
 
     for (int i = 0; i < sizeof(tabelas_sistema)/sizeof(tabelas_sistema[0]); i++)
@@ -466,23 +469,24 @@ TLSE* HASH_busca(char* nome_arq_hash, TAtleta atleta, int hash_func(void* chave)
 
 }
 
-void HASH_print(char* nome_arq, int hash_size){
+void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offset){
     FILE* arq_hash = fopen(nome_arq, "rb");
 
-    Data aux;
+    void* aux = malloc(register_size);
 
     for (int i = 0; i < hash_size; i++)
     {
-        fseek(arq_hash, sizeof(Data)*i, SEEK_SET);
-        fread(&aux, sizeof(Data), 1, arq_hash);
-        printf("%s", aux.nome);
+        fseek(arq_hash, register_size*i, SEEK_SET);
+        fread(aux, register_size, 1, arq_hash);
+        printf("%s", aux);
 
-        while (aux.prox != INT_MIN && aux.prox != -1 )
+        int* aux_prox = (int*)((char*)aux + prox_offset);
+        while (*aux_prox != INT_MIN && *aux_prox != -1 )
         {
             printf("-->");
-            fseek(arq_hash, aux.prox, SEEK_SET);
-            fread(&aux, sizeof(Data), 1, arq_hash);
-            printf("%s", aux.nome);
+            fseek(arq_hash, *aux_prox, SEEK_SET);
+            fread(aux, register_size, 1, arq_hash);
+            printf("%s", aux);
         }
 
         printf("\n");
@@ -643,7 +647,6 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
     int offset = 0;
     while(*aux_prox != -1 && *aux_prox != INT_MIN ){
 
-
         offset = *aux_prox;
 
         fseek(arq_hash, offset, SEEK_SET);
@@ -651,6 +654,8 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
         aux = malloc(register_size);
 
         fread(aux, register_size, 1, arq_hash);
+
+        aux_prox = (int*)((char*)aux + prox_offset);
 
         lse = TLSE_insere_inicio(lse, aux);
 
@@ -663,3 +668,6 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
 
 
 }
+
+
+

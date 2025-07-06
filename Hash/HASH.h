@@ -12,14 +12,17 @@ void HASH_inicializa_champions(char* nome_arq_dados, char* nome_arq_hash, int ha
 
 TLSE* HASH_busca(char* nome_arq_hash, TAtleta atleta, int hash_func(void* chave));
 
-void HASH_print(char* nome_arq, int hash_size);
+void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offset);
 
 int hash_nacionalidade(void* chave);
+
 
 void HASH_remove_global(void* data);
 
 void HASH_inicializa_generica(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int register_size, void* sentinela, void (*preenche_hash)(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)), int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b));
 
 void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b));
+
+TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, int prox_offset, int hash_func(void* chave));
 
 #endif 
