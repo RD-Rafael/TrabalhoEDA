@@ -14,7 +14,7 @@ int main(){
     TABM_inicializa("BMFiles/index.bin");
     TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
 
-    // retira_pais();
+    retira_pais();
 
     // TAtleta* x = TABM_busca("BMFiles/index.bin", "Steeb");
 
@@ -27,7 +27,7 @@ int main(){
     //TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
     //printf("%d\n", TABM_no_count("BMFiles/index.bin"));
 
-    MENU_selecionaAcao();
+    // MENU_selecionaAcao();
  
 
     return 0;

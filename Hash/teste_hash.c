@@ -106,7 +106,7 @@ int main(){
     Data sentinela = {.nome = "-", .prox = INT_MIN};
 
 
-    HASH_inicializa_generica("../tennis_players.txt", "teste_hash_gen.hash", 53, sizeof(Data), &sentinela, preenche_hash, hash_nacionalidade, order);
+    HASH_inicializa_generica("../tennis_players.txt", "hash_por_nacionalidade.hash", 53, sizeof(Data), &sentinela, preenche_hash, hash_nacionalidade, order);
 
     return 0;
 }

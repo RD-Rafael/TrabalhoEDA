@@ -225,16 +225,17 @@ void retira_pais(){
     TAtleta atleta_temp;
     strcpy(atleta_temp.nacionalidade, pais);
     
-    TLSE* lse = HASH_busca("Hash/paises.hash", atleta_temp, hash_nacionalidade);
+    TLSE* lse = HASH_busca("Hash/hash_por_nacionalidade.hash", atleta_temp, hash_nacionalidade);
     TLSE* old = lse;
 
 
     while(lse){
         TAtleta* atleta = TABM_busca("BMFiles/index.bin", lse->info);
         TABM_retira("BMFiles/index.bin", lse->info);
-        HASH_remove_global(atleta);
+        HASH_remove_global((void*)atleta);
         strcpy(lse->info, atleta->nome);
         lse = lse->prox;
+        
     }
 
     printf("Os seguintes atletas forma deletados da base de dados:\n");

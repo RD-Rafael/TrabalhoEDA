@@ -8,8 +8,10 @@
 
 
 typedef struct hashs{
-    char nome_arq_hash[30];
+    char nome_arq_hash[50];
     int (*hash_func)(void* chave);
+    int register_size;
+    int prox_offset;
 }Hash;
 
 typedef struct data{
@@ -335,53 +337,61 @@ void HASH_inicializa_champions(char* nome_arq_dados, char* nome_arq_hash, int ha
     fclose(arq_dados);
 }
 
-void HASH_remove(char* nome_arq_hash, TAtleta* atleta, int hash_func(void* chave)){
+void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_offset, int hash_func(void* chave)){
 
     FILE* arq_hash = fopen(nome_arq_hash, "rb+");
 
-    int hash = hash_func(atleta);
+    int hash = hash_func(data);
 
-    Data aux;
-    Data ant;
-    strcpy(ant.nome, "-");
-    ant.prox = INT_MIN;
+    void* aux = malloc(register_size);
+    void* ant = malloc(register_size);
 
-    fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
-    fread(&aux, sizeof(Data), 1, arq_hash);
+    // strcpy(ant.nome, "-");
+    // ant.prox = INT_MIN;
 
-    int offset_atual = sizeof(Data)*hash;  
+    fseek(arq_hash, register_size*hash, SEEK_SET);
+    fread(aux, register_size, 1, arq_hash);
+
+    int offset_atual = register_size*hash;  
     int offset_ant = -1; 
     
-    while(strcmp(aux.nome, atleta->chave) != 0 && aux.prox != -1 && aux.prox != INT_MIN){
+    int* aux_prox = (int*)((char*)aux + prox_offset);
+    int* ant_prox = (int*)((char*)ant + prox_offset);
 
-        strcpy(ant.nome, aux.nome);
-        ant.prox = aux.prox;
+    while(strcmp(aux, data) != 0 && *aux_prox != -1 && *aux_prox != INT_MIN){
+
+        strcpy(ant, aux);
+        *ant_prox = *aux_prox;
 
         offset_ant = offset_atual;  
-        offset_atual = aux.prox;  
+        offset_atual = *aux_prox;  
 
         fseek(arq_hash, offset_atual, SEEK_SET);
-        fread(&aux, sizeof(Data), 1, arq_hash);
+        fread(aux, register_size, 1, arq_hash);
     }
 
-    if(strcmp(aux.nome, atleta->chave) == 0){
+    if(strcmp(aux, data) == 0){
 
         if(offset_ant != -1) {
-            ant.prox = aux.prox;
+            *ant_prox = *aux_prox;
             fseek(arq_hash, offset_ant, SEEK_SET);
-            fwrite(&ant, sizeof(Data), 1, arq_hash);
+            fwrite(ant, register_size, 1, arq_hash);
         } 
         else {
-            Data vazio = {.nome = "-", .prox = INT_MIN};
-            fseek(arq_hash, sizeof(Data)*hash, SEEK_SET);
-            fwrite(&vazio, sizeof(Data), 1, arq_hash);
+            void* vazio = malloc(register_size);
+            int* vazio_prox = (int*)((char*)vazio + prox_offset);
+            strcpy(vazio, "-");
+            *vazio_prox = INT_MIN;
+            fseek(arq_hash, register_size*hash, SEEK_SET);
+            fwrite(vazio, register_size, 1, arq_hash);
+            free(vazio);
         }
 
-        if(offset_atual != sizeof(Data)*hash) {
-            strcpy(aux.nome, "-");
-            aux.prox = INT_MIN;
+        if(offset_atual != register_size*hash) {
+            strcpy(aux, "-");
+            *aux_prox = INT_MIN;
             fseek(arq_hash, offset_atual, SEEK_SET);
-            fwrite(&aux, sizeof(Data), 1, arq_hash);
+            fwrite(&aux, register_size, 1, arq_hash);
         }
 
     }
@@ -392,15 +402,18 @@ void HASH_remove(char* nome_arq_hash, TAtleta* atleta, int hash_func(void* chave
     fclose(arq_hash);
 }
 
-void HASH_remove_global(TAtleta* atleta){
+void HASH_remove_global(void* data){
+
+    printf("Chegou");
+
 
     Hash tabelas_sistema[] = {
-    {"Hash/paises.hash", hash_nacionalidade},
+    {"Hash/hash_por_nacionalidade.hash", hash_nacionalidade, 40, 36},
 };
 
     for (int i = 0; i < sizeof(tabelas_sistema)/sizeof(tabelas_sistema[0]); i++)
     {
-        HASH_remove(tabelas_sistema[i].nome_arq_hash, atleta, tabelas_sistema[i].hash_func);
+        HASH_remove(tabelas_sistema[i].nome_arq_hash, data, tabelas_sistema[i].register_size, tabelas_sistema[i].prox_offset, tabelas_sistema[i].hash_func);
     }
 
 
@@ -602,3 +615,51 @@ void HASH_inicializa_generica(char* nome_arq_dados, char* nome_arq_hash, int has
 
 }
 
+
+TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, int prox_offset, int hash_func(void* chave)){
+
+    FILE* arq_hash = fopen(nome_arq_hash, "rb+");
+
+    if(!arq_hash){
+        printf("Arquivo Hash não existe\n");
+        exit(1);
+    }
+
+
+    TLSE* lse = TLSE_inicializa();
+
+
+    int hash = hash_func(data);
+
+    void* aux = malloc(register_size);
+
+    fseek(arq_hash, register_size*hash, SEEK_SET);
+    fread(aux, register_size, 1, arq_hash);
+
+    lse = TLSE_insere_inicio(lse, aux);
+
+    int* aux_prox = (int*)((char*)aux + prox_offset);
+
+    int offset = 0;
+    while(*aux_prox != -1 && *aux_prox != INT_MIN ){
+
+
+        offset = *aux_prox;
+
+        fseek(arq_hash, offset, SEEK_SET);
+
+        aux = malloc(register_size);
+
+        fread(aux, register_size, 1, arq_hash);
+
+        lse = TLSE_insere_inicio(lse, aux);
+
+    }
+
+
+    fclose(arq_hash);
+
+    return lse;
+
+
+}
