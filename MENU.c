@@ -229,7 +229,6 @@ void retira_pais(){
 
     char pais[40];
 
-    // HASH_print("Hash/hash_por_nacionalidade.hash", 50, 40, 36);
 
     printf("Deseja remover os atletas de qual nacionalidade da base de dados?\n");
     scanf("%s", pais);
@@ -410,9 +409,6 @@ void maiores_campeoes_torneio(){
         printf("\n\n\n\nTorneio %s\n", nomes_torneios[i]);
         lse = HASH_busca_com_hash("./Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
 
-        // while(lse){
-
-        // }
 
         TLSE_ordena(lse, compara);
 
@@ -541,7 +537,6 @@ void ranking_geral(){
 
     for (int i = 1990; i <= 2024; i++)
     {   
-        // printf("\nAno de %d:\n", i);
         lse = HASH_busca_generica("./Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
 
         iter = lse;
@@ -584,7 +579,6 @@ void ranking_geral(){
     }
     TLSE_free(lse);
     
-    // free(lse);
 }
 
 
@@ -650,7 +644,6 @@ void pontuacao_obtida_por_ano(){
 
     TLSE_free(lse);
     
-    // free(lse);
 }
 
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){

@@ -14,17 +14,6 @@ int main(){
     TABM_inicializa("BMFiles/index.bin");
     TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
 
-    // retira_pais();
-
-    // maiores_campeoes_torneio();
-    // furou_ranking();
-
-    // TAtleta* x = TABM_busca("BMFiles/index.bin", "Steeb");
-
-    // imprimeTABM("BMFiles/index.bin");
-
-    // if(!x) printf("\nNot found\n");
-    // else printf("\n%s\n", x->nome);
     
     
     //TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
@@ -33,7 +22,6 @@ int main(){
     while(1){
         MENU_selecionaAcao();
     }
-    // MENU_selecionaAcao();
  
 
     return 0;

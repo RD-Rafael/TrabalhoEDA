@@ -107,7 +107,6 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
     fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
 
     int ano;
-    int i = 0;
 
     while (fgets(linha, sizeof(linha), arq_dados))
     {   
@@ -151,16 +150,8 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
             
         }
 
-        // break;
 
-        i++;
-
-        // if(i > 20) break;
     }
-    
-    // HASH_print(nome_arq_hash, 15, sizeof(Champion), offsetof(Champion, prox));
-
-    // printf("%d e %d", sizeof(Champion), offsetof(Champion, prox));
     
 
     fclose(arq_dados);
