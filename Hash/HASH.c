@@ -249,15 +249,14 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
         fclose(arq_hash);
         return;
     }
-
+    printf("\n\nStrings 1: %s = %s\n\n", (char*)data, (char*)aux);
     //Colisão, percorrer lista até o fim
     while (ord_func(data, aux) > 0 && *aux_prox != -1)
     {   
-        // printf("\n\nStrings analise: %s = %s\n\n", (char*)data, (char*)aux);
+    printf("\n\nStrings 2: %s = %s\n\n", (char*)data, (char*)aux);
     // printf("%s entrou aqui no INT_MIN\n", (char*)data);
      
-
-        
+        if(strcmp((char*)data, (char*)aux) == 0) break;
 
         fseek(arq_hash, *aux_prox, SEEK_SET);
 
@@ -272,6 +271,8 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
     }
 
     if(strcmp((char*)data, (char*)aux) == 0){
+            // printf("\n\nStrings analise: %s = %s\n\n", (char*)data, (char*)aux);
+
             int res = deal_with_same_input(arq_hash, data, aux);
             if(res) {
                 fclose(arq_hash);
