@@ -79,7 +79,7 @@ void MENU_selecionaAcao(){
             printf("(3): Ver a ranking geral de tenistas desde 1990\n");
             printf("(4): Ver a ranking ano a ano(25 melhores) de tenistas desde 1990\n");
             printf("(5): Ver lista de jogadores que venceram todos os Grand Slams no mesmo ano\n");
-            printf("(6): Ver lista de quem furou o ranking, isto é, ganhou algum torneio, mas não estava no ranking (até 25\n");
+            printf("(6): Ver lista de quem furou o ranking, isto é, ganhou algum torneio, mas não estava no ranking (até 25)\n");
             printf("(7): Retirar todos os jogadores de determinada nacionalidade\n");
             printf("(8): Listar 8 melhores jogadores de cada ano\n");
             printf("(9): Ver todos os vencedores, em ordem decrescente, por torneio\n");
@@ -716,7 +716,7 @@ void grand_slams_mesmo_ano(){
 
             if(ganhou_tudo){
                 alguem_ganhou = 1;
-                printf("O %s ganhou fou tudo esse ano: ", champion->chave);
+                printf("%s ganhou tudo esse ano: ", champion->chave);
 
                 for (int i = 0; (champion->pontos[i] != 0 && i<15); i++)
                 {
