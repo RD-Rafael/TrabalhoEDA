@@ -894,6 +894,102 @@ void ATP_final_por_ano(){
     
 }
 
+void nasceu_com_compatriota_campeao_new(){
+
+    const char* nacionalidades_hash[] = {
+    "Argentina",
+    "Australia", 
+    "Austria",
+    "Belarus",
+    "Belgium",
+    "Brazil",
+    "Bulgaria", 
+    "Canada",
+    "Chile",
+    "Croatia",
+    "Cyprus",
+    "Czech Republic",
+    "Denmark",
+    "Ecuador",
+    "Finland",
+    "France",
+    "Georgia",
+    "Germany",
+    "Great Britain",
+    "Greece",
+    "Haiti",
+    "Hungary",
+    "India",
+    "Israel",
+    "Italy",
+    "Japan",
+    "Kazakhstan",
+    "Latvia",
+    "Luxembourg",
+    "Morocco",
+    "Netherlands",
+    "Norway",
+    "Peru",
+    "Poland",
+    "Romania",
+    "Russia",
+    "Serbia",
+    "Slovakia",
+    "South Africa",
+    "Spain",
+    "Sweden",
+    "Switzerland",
+    "Taipei",
+    "Thailand",
+    "Ukraine",
+    "United States",
+    "Uruguay",
+    "Yugoslavia",
+    "Zimbabwe",
+    "15",
+    "25"
+    };
+
+    TAtleta temp;
+
+
+    for (int i = 0; i < sizeof(nacionalidades_hash)/sizeof(nacionalidades_hash)[0]; i++){
+
+        strcpy(temp.nacionalidade, nacionalidades_hash[i]);
+        TLSE* compatriotas = HASH_busca_generica("Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
+
+        while(compatriotas){
+            
+            TAtleta*atleta  = TABM_busca("BMFiles/index.bin", compatriotas->info);
+
+            if(atleta && atleta->anoNascimento >= 1990){
+                TLSE* vencedores_ano = HASH_busca_com_hash("Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), (atleta->anoNascimento-1990));
+                
+
+                 TLSE* iter = compatriotas;
+
+                 while(iter){
+
+                     if(esta_na_lista(vencedores_ano, iter->info)){
+                         printf(" -> %s ganhou um Grand Slam no ano de %d, quando seu compatriota %s nasceu\n\n", (char*)iter->info, atleta->anoNascimento, (char*)compatriotas->info);
+                     }
+                     iter = iter->prox;
+                 }
+
+                 // TLSE_print_teste(vencedores_ano);
+
+            }
+                
+            compatriotas = compatriotas->prox;
+            }
+            
+        
+
+
+        // break;
+    }
+
+}
 
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){
 

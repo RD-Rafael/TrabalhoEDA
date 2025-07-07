@@ -56,7 +56,7 @@ TLSE* TLSE_insere_nao_duplicado(TLSE* output, void* new) {
 
 void TLSE_print(TLSE* lse) {
     while (lse) {
-        printf("%p\n", lse->info);
+        printf("%s\n", (char*)(lse->info));
         lse = lse->prox;
     }
 }
@@ -179,92 +179,34 @@ TLSE* TLSE_copy(TLSE* lse) {
     return nova_lista;
 }
 
-TLSE* TLSE_cria_lista_fake_1990() {
-    // Jogadores que disputaram ATP Finals em 1990 (em ordem de classificação)
-    const char* jogadores_1990[8] = {
-        "Stefan Edberg",     // 1º - Maior pontuação
-        "André Agassi",      // 2º
-        "Pete Sampras",      // 3º
-        "Emílio Sanchez",    // 4º
-        "Boris Becker",      // 5º
-        "Ivan Lendl",        // 6º
-        "Andrés Goméz",      // 7º
-        "Thomas Muster"      // 8º - Menor pontuação
-    };
-    
-    // Pontuações fake decrescentes (começando com 5000 pontos)
-    int pontuacoes_fake[8] = {
-        5000,  // Stefan Edberg
-        4500,  // André Agassi
-        4000,  // Pete Sampras
-        3500,  // Emílio Sanchez
-        3000,  // Boris Becker
-        2500,  // Ivan Lendl
-        2000,  // Andrés Goméz
-        1500   // Thomas Muster
-    };
-    
-    // Torneios fake para distribuir pontos
-    const char* torneios_fake[4] = {
+int esta_na_lista(TLSE* lse, char* chave){
+
+    const char* grand_slams[4] = {
         "Australian Open",
         "French Open", 
         "Wimbledon",
         "US Open"
     };
-    
-    TLSE* lista_fake = TLSE_inicializa();
-    
-    printf("=== CRIANDO LISTA FAKE PARA 1990 ===\n");
-    
-    for (int i = 0; i < 8; i++) {
-        // Alocar memória para o jogador
-        ChampionsByYearTeste* jogador = malloc(sizeof(ChampionsByYearTeste));
-        
-        // Inicializar estrutura
-        strcpy(jogador->chave, jogadores_1990[i]);
-        jogador->prox = -1;
-        
-        // Inicializar arrays
-        for (int j = 0; j < 15; j++) {
-            strcpy(jogador->torneio[j], "-");
-            jogador->pontos[j] = 0;
-        }
-        
-        // Distribuir pontuação fake entre alguns torneios
-        int pontos_restantes = pontuacoes_fake[i];
-        int torneios_usados = 0;
-        
-        // Dar pontos de Grand Slams primeiro (para critério de desempate)
-        for (int j = 0; j < 4 && pontos_restantes > 0; j++) {
-            if (pontos_restantes >= 500) {
-                strcpy(jogador->torneio[torneios_usados], torneios_fake[j]);
-                jogador->pontos[torneios_usados] = 500 + (rand() % 300); // 500-800 pontos
-                pontos_restantes -= jogador->pontos[torneios_usados];
-                torneios_usados++;
+
+    while(lse){
+        if(strcmp(lse->info, chave)==0) {
+            ChampionsByYearTeste* champion = (ChampionsByYearTeste*)(lse->info);
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if(strcmp(grand_slams[j], champion->torneio[i])==0) return 1;
+                }
+                
             }
+            
         }
-        
-        // Distribuir pontos restantes em outros torneios
-        while (pontos_restantes > 0 && torneios_usados < 10) {
-            strcpy(jogador->torneio[torneios_usados], "ATP Masters");
-            int pontos_torneio = (pontos_restantes > 300) ? 200 + (rand() % 100) : pontos_restantes;
-            jogador->pontos[torneios_usados] = pontos_torneio;
-            pontos_restantes -= pontos_torneio;
-            torneios_usados++;
-        }
-        
-        // Armazenar total em pontos[0]
-        jogador->pontos[0] = pontuacoes_fake[i];
-        
-        printf("Jogador %d: %s - %d pontos\n", i+1, jogador->chave, jogador->pontos[0]);
-        
-        // Inserir na lista
-        lista_fake = TLSE_insere_inicio(lista_fake, jogador);
+        lse=lse->prox;
     }
-    
-    printf("=== LISTA FAKE 1990 CRIADA COM SUCESSO ===\n\n");
-    
-    return lista_fake;
+
+    return 0;
+
 }
 
 // Função alternativa mais simples (apenas com pontuação total)

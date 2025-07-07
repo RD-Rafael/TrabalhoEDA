@@ -16,7 +16,9 @@ int main(){
 
     // grand_slams_mesmo_ano();
 
-    ATP_final_por_ano();
+    // ATP_final_por_ano();
+
+    nasceu_com_compatriota_campeao_new();
     
     //TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
     //printf("%d\n", TABM_no_count("BMFiles/index.bin"));

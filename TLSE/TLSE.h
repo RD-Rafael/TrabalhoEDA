@@ -21,6 +21,7 @@ TLSE* TLSE_ordena(TLSE* lse, int (*compara)(void* a, void* b));
 TLSE* TLSE_ordena_ATP_Finals(TLSE* lse, TLSE* lse_ant,  int (*compara)(void* a, void* b, TLSE* lse_ant));
 TLSE* TLSE_copy(TLSE* lse);
 TLSE* TLSE_cria_lista_fake_1990_simples();
+int esta_na_lista(TLSE* lse, char* chave);
 TLSE* TLSE_insere_nao_duplicado(TLSE* lse, void* info);
 
 
