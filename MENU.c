@@ -4,6 +4,8 @@
 #include "./TLSE/TLSE.h"
 #include "./Hash/HASH.h"
 #include <string.h>
+#include <stddef.h>
+
 
 char* getNacionalidade(int n){
     FILE* fp = fopen("nationalities.txt", "r");
@@ -257,6 +259,159 @@ void retira_pais(){
 
 }
 
+void nasceu_com_compatriota_campeão(){
+
+    const char* nacionalidades_hash[] = {
+    "Argentina",
+    "Australia", 
+    "Austria",
+    "Belarus",
+    "Belgium",
+    "Brazil",
+    "Bulgaria", 
+    "Canada",
+    "Chile",
+    "Croatia",
+    "Cyprus",
+    "Czech Republic",
+    "Denmark",
+    "Ecuador",
+    "Finland",
+    "France",
+    "Georgia",
+    "Germany",
+    "Great Britain",
+    "Greece",
+    "Haiti",
+    "Hungary",
+    "India",
+    "Israel",
+    "Italy",
+    "Japan",
+    "Kazakhstan",
+    "Latvia",
+    "Luxembourg",
+    "Morocco",
+    "Netherlands",
+    "Norway",
+    "Peru",
+    "Poland",
+    "Romania",
+    "Russia",
+    "Serbia",
+    "Slovakia",
+    "South Africa",
+    "Spain",
+    "Sweden",
+    "Switzerland",
+    "Taipei",
+    "Thailand",
+    "Ukraine",
+    "United States",
+    "Uruguay",
+    "Yugoslavia",
+    "Zimbabwe",
+    "15",
+    "25"
+    };
+
+    TLSE* lse = TLSE_inicializa();
+
+    // FILE* arq_hash_nacionalidade = fopen("./Hash/hash_por_nacionalidade.hash", "rb");
+    int register_size = 40;
+    int prox_offset = 36;
+
+    TAtleta atleta_temp;
+    
+    
+    for (int i = 0; i < sizeof(nacionalidades_hash)/sizeof(nacionalidades_hash)[0]; i++) //Percorre todas as linhas da hash table de nacionalidade
+    {   
+        strcpy(atleta_temp.nacionalidade, nacionalidades_hash[i]);
+
+        lse = HASH_busca_generica("./Hash/hash_por_nacionalidade.hash", &atleta_temp, register_size, prox_offset, hash_nacionalidade);
+
+        TLSE* old = lse;
+
+        while (lse)
+        {
+            TAtleta* atleta = TABM_busca("BMFiles/index.bin", lse->info);
+
+            if(atleta && atleta->rank != -1){
+
+
+            }
+        }
+        
+
+        printf("\n\n\nPais %s\n", nacionalidades_hash[i]);
+        TLSE_print(lse);
+        TLSE_free(lse);
+
+    }
+
+}
+
+int compara(void* a, void* b){
+
+    Champion* x = (Champion*)a;
+    Champion* y = (Champion*)b;
+
+    int qtd_x = 0;
+    int qtd_y = 0;
+    for (int i = 0; i < 34; i++)
+    {
+        if(x->ano[i] != 0) qtd_x++;
+        if(y->ano[i] != 0) qtd_y++;
+
+        if((x->ano[i] == 0) && (y->ano[i] == 0)) break;
+    }
+    
+    if(qtd_y == qtd_x){
+        return strcmp(x->chave, y->chave);
+    }
+
+    return qtd_y - qtd_x;
+}
+
+void maiores_campeoes_torneio(){
+
+    TLSE* lse = TLSE_inicializa;
+
+    TLSE* output = TLSE_inicializa;
+
+    const char* nomes_torneios[15] = {
+    "Australian Open",
+    "French Open", 
+    "Wimbledon",
+    "US Open",
+    "ATP Finals",
+    "Olympic games",
+    "Indian Wells",
+    "Miami",
+    "Monte Carlo",
+    "Madrid",
+    "Rome",
+    "Canada",
+    "Cincinnati",
+    "Shanghai",
+    "Paris"
+};
+
+    for (int i = 0; i < 15; i++)
+    {
+        printf("\n\n\n\nTorneio %s\n", nomes_torneios[i]);
+        lse = HASH_busca_com_hash("./Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
+
+        // while(lse){
+
+        // }
+
+        TLSE_ordena(lse, compara);
+
+        TLSE_print_champion(lse);
+    }
+    
+}
 
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){
 

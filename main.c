@@ -14,7 +14,9 @@ int main(){
     TABM_inicializa("BMFiles/index.bin");
     TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
 
-    retira_pais();
+    // retira_pais();
+
+    maiores_campeoes_torneio();
 
     // TAtleta* x = TABM_busca("BMFiles/index.bin", "Steeb");
 

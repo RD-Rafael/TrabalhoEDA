@@ -19,7 +19,7 @@ typedef struct data{
     int prox;
 }Data;
 
-typedef struct champion{
+typedef struct champion_delete{
     char chave[35];
     int ano;
     int prox;
@@ -489,7 +489,7 @@ void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offse
             printf("%s", aux);
         }
 
-        printf("\n");
+        printf("\n\n\n");
     }
 
     fclose(arq_hash);
@@ -512,7 +512,130 @@ void inicializa_arq_hash_vazio_generica(char* nome_arq_hash, int hash_size, int 
 
 }
 
-void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b)){
+void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b), int (*deal_with_same_input)(FILE* arq_hash, void* new_data, void* file_data)){
+
+
+    // printf("%d\n", hash);
+    // printf("Insercao de: %s\n", (char*)data);
+
+
+    FILE* arq_hash = fopen(nome_arq_hash, "rb+");
+
+
+    void* aux = malloc(register_size);
+
+    fseek(arq_hash, register_size*hash, SEEK_SET);
+    fread(aux, register_size, 1, arq_hash);
+
+    int* aux_prox = ((int*)((char*)aux + prox_offset));
+    // printf("\n\n%d\n\n", *aux_prox);
+
+
+    if(*(aux_prox) == INT_MIN){
+
+    // printf("%s entrou aqui no INT_MIN\n", (char*)data);
+
+
+        
+        fseek(arq_hash, register_size*hash, SEEK_SET);
+        fwrite(data, register_size, 1, arq_hash);
+        fseek(arq_hash, 0, SEEK_SET);
+        free(aux);
+        fclose(arq_hash);
+        return;
+    }
+
+    //Colisão, percorrer lista até o fim
+    while (ord_func(data, aux) > 0 && *aux_prox != -1)
+    {   
+        // printf("\n\nStrings analise: %s = %s\n\n", (char*)data, (char*)aux);
+    // printf("%s entrou aqui no INT_MIN\n", (char*)data);
+     
+
+        
+
+        fseek(arq_hash, *aux_prox, SEEK_SET);
+
+        fread(aux, register_size, 1, arq_hash);
+
+        aux_prox = ((int*)((char*)aux + prox_offset));
+
+        if(strcmp((char*)data, (char*)aux) == 0) break;
+
+
+
+    }
+
+    if(strcmp((char*)data, (char*)aux) == 0){
+            int res = deal_with_same_input(arq_hash, data, aux);
+            if(res) {
+                fclose(arq_hash);
+                free(aux);
+                return;
+            } //Usuário decide na função o que ele quer fazer nesse ponto
+        }
+
+
+    fseek(arq_hash, -register_size, SEEK_CUR);
+    int ant = ftell(arq_hash);
+    fseek(arq_hash, 0, SEEK_END);
+
+    if(*aux_prox == -1 && ord_func(data, aux) > 0){
+    // printf("%s entrou aqui no -1\n", (char*)data);
+
+
+        *aux_prox = ftell(arq_hash);
+        fseek(arq_hash, ant, SEEK_SET);
+        fwrite(aux, register_size, 1, arq_hash);
+        fseek(arq_hash, 0, SEEK_END);
+
+        fseek(arq_hash, 0, SEEK_END);
+        fwrite(data, register_size, 1, arq_hash);
+
+    }
+    else{
+
+    // printf("%s entrou aqui no else\n", (char*)data);
+
+    
+        int * data_prox = ((int*)((char*)data + prox_offset));
+        *data_prox = *aux_prox;
+
+        *aux_prox = ftell(arq_hash);
+
+        // printf("ftell = %d\n", *aux_prox/register_size);
+
+
+
+        fwrite(data, register_size, 1, arq_hash);
+
+        
+
+
+        fseek(arq_hash, ant, SEEK_SET);
+
+        fwrite(aux, register_size, 1, arq_hash);
+
+
+
+    }
+
+    free(aux);
+    fclose(arq_hash);
+}
+
+
+void HASH_inicializa_generica(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int register_size, void* sentinela, void (*preenche_hash)(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)), int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+
+
+    inicializa_arq_hash_vazio_generica(nome_arq_hash, hash_size,register_size, sentinela);
+
+    preenche_hash(nome_arq_dados, nome_arq_hash, hash_func, ord_func);
+
+
+}
+
+void HASH_inserir_por_torneio(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b)){
 
 
     printf("%d\n", hash);
@@ -548,8 +671,12 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
     //Colisão, percorrer lista até o fim
     while (ord_func(data, aux) > 0 && *aux_prox != -1)
     {   
-
+        
     // printf("%s entrou aqui no INT_MIN\n", (char*)data);
+
+        if(strcmp(data, aux) == 0){
+            if(strcmp(data, "Courier")) printf("Strings iguais: %s = %s", (char*)data, (char*)aux);
+        }
 
         fseek(arq_hash, *aux_prox, SEEK_SET);
 
@@ -609,17 +736,6 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
 }
 
 
-void HASH_inicializa_generica(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int register_size, void* sentinela, void (*preenche_hash)(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)), int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
-
-
-    inicializa_arq_hash_vazio_generica(nome_arq_hash, hash_size,register_size, sentinela);
-
-    preenche_hash(nome_arq_dados, nome_arq_hash, hash_func, ord_func);
-
-
-}
-
-
 TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, int prox_offset, int hash_func(void* chave)){
 
     FILE* arq_hash = fopen(nome_arq_hash, "rb+");
@@ -669,5 +785,53 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
 
 }
 
+TLSE* HASH_busca_com_hash(char* nome_arq_hash, int register_size, int prox_offset, int hash){
+
+
+    FILE* arq_hash = fopen(nome_arq_hash, "rb+");
+
+    if(!arq_hash){
+        printf("Arquivo Hash não existe\n");
+        exit(1);
+    }
+
+
+    TLSE* lse = TLSE_inicializa();
+
+
+
+    void* aux = malloc(register_size);
+
+    fseek(arq_hash, register_size*hash, SEEK_SET);
+    fread(aux, register_size, 1, arq_hash);
+
+    lse = TLSE_insere_inicio(lse, aux);
+
+    int* aux_prox = (int*)((char*)aux + prox_offset);
+
+    int offset = 0;
+    while(*aux_prox != -1 && *aux_prox != INT_MIN ){
+
+        offset = *aux_prox;
+
+        fseek(arq_hash, offset, SEEK_SET);
+
+        aux = malloc(register_size);
+
+        fread(aux, register_size, 1, arq_hash);
+
+        aux_prox = (int*)((char*)aux + prox_offset);
+
+        lse = TLSE_insere_inicio(lse, aux);
+
+    }
+
+
+    fclose(arq_hash);
+
+    return lse;
+
+
+}
 
 

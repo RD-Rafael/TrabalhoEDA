@@ -4,6 +4,12 @@
 #include "../ATLETA.h"
 #include "../TLSE/TLSE.h"
 
+typedef struct champion{
+    char chave[35];
+    int ano[34];
+    int prox;
+}Champion;
+
 
 void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b));
 
@@ -21,8 +27,10 @@ void HASH_remove_global(void* data);
 
 void HASH_inicializa_generica(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int register_size, void* sentinela, void (*preenche_hash)(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)), int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b));
 
-void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b));
+void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b), int (*deal_with_same_input)(FILE* arq_hash, void* new_data, void* file_data));
 
 TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, int prox_offset, int hash_func(void* chave));
+
+TLSE* HASH_busca_com_hash(char* nome_arq_hash, int register_size, int prox_offset, int hash);
 
 #endif 

@@ -10,11 +10,11 @@
     int prox;
     }Data;
 
-typedef struct champion{
-    char chave[35];
-    int ano;
-    int prox;
-}Champion;
+// typedef struct champion{
+//     char chave[35];
+//     int ano[34];
+//     int prox;
+// }Champion;
 
 
 int order(void * a, void* b){
@@ -26,89 +26,44 @@ int order(void * a, void* b){
     return 1;
 }
 
+int deal_with_same_input(FILE* arq_hash, void* new_data, void* file_data){
 
+    Champion* new = (Champion*)new_data;
+    Champion* old = (Champion*)file_data;
 
-int hashing_ganhadores_por_ano(void* chave){
-    Champion* data = (Champion*)chave;
+    // if(strcmp(new->chave, "Courier") == 0){
+    //     printf("\n=== DUPLICATA DETECTADA ===\n");
+    //     printf("Novo: %s (ano %d)\n", new->chave, new->ano[0]);
+    //     printf("Existente: %s\n", old->chave);
+    //     printf("Anos existentes: ");
+    //     for(int j = 0; j < 5; j++) {
+    //         if(old->ano[j] != 0) printf("%d ", old->ano[j]);
+    //     }
+    //     printf("\n\n\n");
 
-    return (data->ano - 1990)%34;
-}
+    // }
+    
 
-
-void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
-    printf("kkk");
-
-    FILE* arq_dados = fopen(nome_arq_dados, "r");
-
-    TAtleta atleta;
-
-    int x = 0;
-
-    fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
-
-    char anoMorte_buffer[10];
-    char rank_buffer[10];
-    char anoRank_buffer[10];
-
-    char linha[300];
 
     int i = 0;
-
-    while(fgets(linha, sizeof(linha)/sizeof(linha[0]),arq_dados ) != NULL){
-
-        int qtd_res = sscanf(linha, "%[^\\]\\%d\\%[^\\]\\%[^\\]\\%[^\\]\\%s (%d)",
-               atleta.nome,
-               &atleta.anoNascimento,
-               anoMorte_buffer,
-               atleta.nacionalidade,
-               rank_buffer,
-               anoRank_buffer,
-               &atleta.semanasTop1);
-
-
-        if(qtd_res == 6) atleta.semanasTop1 = -1;
-
-        int inicioSobrenome = 0;
-        int aux = -1;
-        for(int i = 0; i < 35; i++){
-            if(atleta.nome[i] == '\0') break;
-            else if(atleta.nome[i] == ' '){
-                aux = i;
-            } else{
-                inicioSobrenome = aux+1;
-            }
-        }
-
-        strcpy(atleta.chave, &atleta.nome[inicioSobrenome]);
-
-
-        if(strcmp(anoMorte_buffer, "-") == 0) atleta.anoMorte = -1;
-        else atleta.anoMorte = atoi(anoMorte_buffer);
-
-        if(strcmp(rank_buffer, "-") == 0) atleta.rank = -1;
-        else atleta.rank = atoi(rank_buffer);
-
-        if(strcmp(anoRank_buffer, "-") == 0) atleta.anoMelhorRank = -1;
-        else atleta.anoMelhorRank = atoi(anoRank_buffer);
-
-        Data data;
-
-        strcpy(data.nome, atleta.chave);
-        data.prox = -1;
-
-        int hash = hash_func(&atleta);
-
-        int prox_offset = offsetof(Data, prox);
-
-        HASH_inserir_generica(nome_arq_hash, &data, prox_offset, sizeof(Data), hash, ord_func);
-
-        i++;
-
+    for (i = 0; i < 34; i++)
+    {
+        if(old->ano[i] == 0) break;
     }
 
-    fclose(arq_dados);
+    old->ano[i] = new->ano[0];
+
+    // fread(new, sizeof(Champion), 1, arq_hash);
 
 
+    long current_pos = ftell(arq_hash);
+    fseek(arq_hash, current_pos - sizeof(Champion), SEEK_SET);
+    fwrite(old, sizeof(Champion), 1, arq_hash);
+ 
+    // printf("\nOlha o new:%s\n", new->chave);
+
+    
+    return 1; 
 }
 
 // Função para substituir todas as ocorrências de "-" por "INEXISTENTE"
@@ -146,18 +101,18 @@ void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_has
     
 
     int ano;
-    Champion champions[15];
+    Champion champions[15] = {0};
 
     char linha[1000];
 
     fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
 
-    
+    int i = 0;
 
     while (fgets(linha, sizeof(linha), arq_dados))
     {   
         substituir_traco(linha);
-        printf("%s\n", linha);
+        // printf("%s\n", linha);
 
          int ok = sscanf(linha,
             "%d"                      /* ano */
@@ -184,11 +139,11 @@ void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_has
         for (int i = 0; i < 15; i++)
         {   
             if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
-                champions[i].ano = ano;
+                champions[i].ano[0] = ano;
                 champions[i].prox = -1; 
 
               
-                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(Champion, prox), sizeof(Champion), i, ord_func);
+                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(Champion, prox), sizeof(Champion), i, ord_func, deal_with_same_input);
 
 
             }
@@ -197,11 +152,14 @@ void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_has
 
         // break;
 
+        i++;
+
+        // if(i > 20) break;
     }
     
     // HASH_print(nome_arq_hash, 15, sizeof(Champion), offsetof(Champion, prox));
 
-    printf("%d e %d", sizeof(Champion), offsetof(Champion, prox));
+    // printf("%d e %d", sizeof(Champion), offsetof(Champion, prox));
     
 
     fclose(arq_dados);
@@ -209,17 +167,22 @@ void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_has
 
 }
 
+int hashing(void* chave){
+    return 1;
+}
+
 
 int main(){
 
+    Champion sentinela2 = { 
+        .chave = "-", 
+        .ano = {0},           //Inicializa todo o array com 0
+        .prox = INT_MIN 
+    };
+    
 
-    Data sentinela1 = {.nome = "-", .prox = INT_MIN};
-    Champion sentinela2 = { .chave = "-", .ano = -1, .prox = INT_MIN };
 
-//    HASH_inicializa_generica("../arquivos/tennis_players.txt", "hash_por_nacionalidade.hash", 50, sizeof(Data), &sentinela1, preenche_hash, hash_nacionalidade, order);
-
-
-    HASH_inicializa_generica("../arquivos/champions.txt", "hash_por_torneio.hash", 15, sizeof(Champion), &sentinela2, preenche_hash_campeoes_por_torneio, hashing_ganhadores_por_ano, order);
+    HASH_inicializa_generica("../arquivos/champions.txt", "hash_por_torneio.hash", 15, sizeof(Champion), &sentinela2, preenche_hash_campeoes_por_torneio, hashing, order);
 
     HASH_print("hash_por_torneio.hash", 15, sizeof(Champion), offsetof(Champion, prox));
     
