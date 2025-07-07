@@ -627,6 +627,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
         insere_atleta_folha(nomeFolha, atleta);
         free(nomeFolha);
         nomeFolha = NULL;
+        liberaAtleta(atletaVerif);
         return;
     }
 
@@ -639,6 +640,7 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
     TABM raiz;
     if(fread(&raiz, sizeof(TABM), 1, fp) == 0){
         //primeiro atleta a ser inserido na arvore
+        memset(&raiz, 0, sizeof(TABM));
         inicializar_folha(atleta->chave);
         strcpy(raiz.chaves[0], atleta->chave);
         raiz.nchaves = 1;
@@ -656,6 +658,8 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
         if(raiz.nchaves == 2*T-1){
             //é necessário dividir a folha em dois, raiz vira nó interno
             TABM esq, dir;
+            memset(&esq, 0, sizeof(TABM));
+            memset(&dir, 0, sizeof(TABM));
             esq.folha = 1;
             esq.nchaves = T-1;
             dir.folha = 1;
@@ -704,6 +708,8 @@ void TABM_insere(char* nome_indice, TAtleta* atleta){
         }
     } else if(raiz.nchaves == 2*T-1){ //raiz é nó interno, verificar se é completo
         TABM esq, dir;
+        memset(&esq, 0, sizeof(TABM));
+        memset(&dir, 0, sizeof(TABM));
         esq.folha = 0;
         dir.folha = 0;
         esq.nchaves = T-1;
@@ -774,6 +780,7 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
         if(noAtual.nchaves == 2*T-1){
             //dividir folha em dois, no atual vai ser o nó esquerdo
             TABM dir;
+            memset(&dir, 0, sizeof(TABM));
             dir.folha = 1;
             dir.nchaves = T;
             noAtual.nchaves = T-1;
@@ -849,6 +856,7 @@ void TABM_ins_aux(char* nome_indice, int posAtual, int posAntiga, TAtleta* atlet
         if(noAtual.nchaves == 2*T-1){
             //dividir no interno em dois
             TABM dir;
+            memset(&dir, 0, sizeof(TABM));
             dir.folha = 0;
             dir.nchaves = T - 1;
 

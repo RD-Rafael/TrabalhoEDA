@@ -6,6 +6,7 @@ TAtleta* AtletaInit(){
 
 TAtleta* novoAtleta(char* nome, int anoNascimento, int anoMorte, char* nacionalidade, int rank, int anoMelhorRank, int semanasTop1){
     TAtleta* atleta = (TAtleta*) malloc(sizeof(TAtleta));
+    memset(atleta, 0, sizeof(TAtleta));
     strcpy(atleta->nome, nome);
     atleta->anoNascimento = anoNascimento;
     atleta->anoMorte = anoMorte;

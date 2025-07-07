@@ -80,7 +80,7 @@ void MENU_selecionaAcao(){
             printf("(3): Ver a ranking geral de tenistas desde 1990\n");
             printf("(4): Ver a ranking ano a ano(25 melhores) de tenistas desde 1990\n");
             printf("(5): Ver lista de jogadores que venceram todos os Grand Slams no mesmo ano\n");
-            printf("(6): Ver lista de quem furou o ranking, isto é, ganhou algum torneio, mas não estava no ranking (até 25\n");
+            printf("(6): Ver lista de quem furou o ranking, isto é, ganhou algum torneio, mas não estava no ranking (até 25)\n");
             printf("(7): Retirar todos os jogadores de determinada nacionalidade\n");
             printf("(8): Listar 8 melhores jogadores de cada ano\n");
             printf("(9): Ver todos os vencedores, em ordem decrescente, por torneio\n");
@@ -268,12 +268,11 @@ void retira_pais(){
 
         TAtleta* atleta = TABM_busca("BMFiles/index.bin", lse->info);
 
-        if(!atleta) printf("Aviso: Atleta %s não encontrado na base de dados\n", ((TAtleta*)(lse->info))->nome);
-        else{
+        if(atleta){
             TABM_retira("BMFiles/index.bin", lse->info);
             HASH_remove_global((void*)atleta);
             strcpy(lse->info, atleta->nome);
-
+            liberaAtleta(atleta);
         }
 
         lse = lse->prox;
@@ -437,6 +436,8 @@ void maiores_campeoes_torneio(){
         TLSE_ordena(lse, compara);
 
         TLSE_print_maiores_campeoes(lse);
+
+        TLSE_free(lse);
     }
     
 }
@@ -520,20 +521,21 @@ void furou_ranking(){
 
             if(atleta){
 
-            for (int j = 0; j < 34; j++)
-            {   
-                if(campeao->ano[j] == 0) break; 
-                if(atleta->rank == -1) {
-                    printf("\n\nAtleta %s furou o ranking em %d, quando foi campeão do Torneio %s\n", atleta->nome, campeao->ano[j], nomes_torneios[i]);
-                    teve_caso = 1;
+                for (int j = 0; j < 34; j++)
+                {   
+                    if(campeao->ano[j] == 0) break; 
+                    if(atleta->rank == -1) {
+                        printf("\n\nAtleta %s furou o ranking em %d, quando foi campeão do Torneio %s\n", atleta->nome, campeao->ano[j], nomes_torneios[i]);
+                        teve_caso = 1;
+                    }
                 }
+                liberaAtleta(atleta);
             }
-                     }
             
             lse = lse->prox;
         }
 
-        free(old);
+        TLSE_free(old);
 
 }     
 
@@ -565,8 +567,11 @@ void ranking_geral(){
 
         iter = lse;
         while(iter){
-        output = TLSE_insere_nao_duplicado(output, (iter->info));
-            iter = iter->prox;
+            output = TLSE_insere_nao_duplicado(output, (iter->info));
+            
+            TLSE* aux = iter->prox;
+            free(iter);
+            iter = aux;
         }
 
     }
@@ -597,11 +602,12 @@ void ranking_geral(){
         }
         
         
-        iter = iter->prox;
+        TLSE* aux = iter->prox;
+        iter = aux;
 
-        free(atleta);
+        liberaAtleta(atleta);
     }
-    TLSE_free(lse);
+    TLSE_free(output);
     
 }
 
@@ -622,7 +628,10 @@ void pontuacao_obtida_por_ano(){
         iter = lse;
         while(iter){
             output = TLSE_insere_nao_duplicado(output, (iter->info));
-            iter = iter->prox;
+            
+            TLSE* aux = iter->prox;
+            free(iter);
+            iter = aux;
         }
 
         iter2 = output;
@@ -656,7 +665,7 @@ void pontuacao_obtida_por_ano(){
             
             iter2 = iter2->prox;
 
-            free(atleta);
+            liberaAtleta(atleta);
         }
 
     }
@@ -664,7 +673,7 @@ void pontuacao_obtida_por_ano(){
     TLSE_ordena(output, compara_pontuacao);
 
 
-    TLSE_free(lse);
+    TLSE_free(output);
     
 }
 
@@ -709,7 +718,7 @@ void grand_slams_mesmo_ano(){
 
             if(ganhou_tudo){
                 alguem_ganhou = 1;
-                printf("O %s ganhou fou tudo esse ano: ", champion->chave);
+                printf("%s ganhou tudo esse ano: ", champion->chave);
 
                 for (int i = 0; (champion->pontos[i] != 0 && i<15); i++)
                 {
@@ -723,6 +732,8 @@ void grand_slams_mesmo_ano(){
             
             iter = iter->prox;
         }
+
+        TLSE_free(lse);
 
         // TLSE_print_teste(lse);
         // printf("\n\n\n");
@@ -824,7 +835,14 @@ void ATP_final_por_ano(){
 
         printf("\nAno de %d:\n", (1990+i));
 
-        lse = HASH_busca_com_hash("./Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
+        while(lse){
+            TLSE* aux = lse->prox;
+            free(lse);
+            lse = aux;
+        }
+
+        lse = NULL;
+        lse = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
 
 
         iter = lse;
@@ -837,8 +855,12 @@ void ATP_final_por_ano(){
             pre_processamento(iter->info);
             iter = iter->prox;
         }
-        
+
         lse = TLSE_ordena_ATP_Finals(lse, ant, compara_pontuacao_ATP_Finals);
+
+        TLSE_free(ant);
+        ant = TLSE_copy(lse);
+
         iter2 = lse;
 
         while (iter2) {
@@ -850,7 +872,7 @@ void ATP_final_por_ano(){
             if(atleta){
                 printf("%dº - %s - ", pos++, atleta->nome);
         
-
+                liberaAtleta(atleta);
 
             }
             else{
@@ -867,50 +889,40 @@ void ATP_final_por_ano(){
             
             iter2 = iter2->prox;
 
-            free(atleta);
         }
-
-        // if(pos <= 8){
-        //     iter2 = ant;
-        //     while (iter2) {
-
-        //     if(pos > 8) break;
-
-        //     TAtleta* atleta = TABM_busca("BMFiles/index.bin", ((ChampionsByYearTeste*)iter2->info)->chave);
-
-        //     if(atleta){
-        //         printf("%dº - %s - ", pos++, atleta->nome);
-        //         printf("%d", ((ChampionsByYearTeste*)iter2->info)->pontos[0]);
         
-        //         printf("\n\n");
-
-        //     }
-        //     else{
-
-        //         //Devido a erro de pessoas com mais de um sobrenome. Ponto a melhorar
-        //         printf("%dº - %s - ", pos++, ((ChampionsByYearTeste*)iter2->info)->chave);
-        //         printf("%d", ((ChampionsByYearTeste*)iter2->info)->pontos[0]);
-        
-        //         printf("\n\n");
-
-        //     }
-            
-            
-        //     iter2 = iter2->prox;
-
-        //     free(atleta);
-        // }
-
-        // }
-
-        TLSE_free(ant);
-        ant = TLSE_copy(lse);
-
     }
-
-
-
-    TLSE_free(lse);
+    while(ant && lse){
+        void* info = ant->info;
+        TLSE* l = lse;
+        if(l->info == info){
+            free(info);
+            TLSE* auxp = ant->prox;
+            free(ant);
+            ant = auxp;
+            auxp = lse->prox;
+            free(lse);
+            lse = auxp;
+            continue;
+        }
+        TLSE* ant = l;
+        l = l->prox;
+        while(l && l->info != info){
+            ant = l;
+            l = l->prox;
+        }
+        if(l){
+            TLSE* auxp = l->prox;
+            free(l);
+            ant->prox = auxp;
+        }
+        free(info);
+        TLSE* auxp = ant->prox;
+        free(ant);
+        ant = auxp;
+    }
+    
+    
     
 }
 
@@ -976,7 +988,8 @@ void nasceu_com_compatriota_campeao_new(){
     for (int i = 0; i < sizeof(nacionalidades_hash)/sizeof(nacionalidades_hash)[0]; i++){
 
         strcpy(temp.nacionalidade, nacionalidades_hash[i]);
-        TLSE* compatriotas = HASH_busca_generica("Tabelas_Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
+        TLSE* compatriotas = HASH_busca_generica("Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
+        TLSE* aux = compatriotas;
 
         while(compatriotas){
             
@@ -986,23 +999,26 @@ void nasceu_com_compatriota_campeao_new(){
                 TLSE* vencedores_ano = HASH_busca_com_hash("Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), (atleta->anoNascimento-1990));
                 
 
-                 TLSE* iter = compatriotas;
+                TLSE* iter = compatriotas;
 
-                 while(iter){
+                while(iter){
 
-                     if(esta_na_lista(vencedores_ano, iter->info)){
-                         printf(" -> %s ganhou um Grand Slam no ano de %d, quando seu compatriota %s nasceu\n\n", (char*)iter->info, atleta->anoNascimento, (char*)compatriotas->info);
-                     }
-                     iter = iter->prox;
-                 }
-
-
-            }
+                    if(esta_na_lista(vencedores_ano, iter->info)){
+                        printf(" -> %s ganhou um Grand Slam no ano de %d, quando seu compatriota %s nasceu\n\n", (char*)iter->info, atleta->anoNascimento, (char*)compatriotas->info);
+                    }
+                    iter = iter->prox;
+                }
                 
-            compatriotas = compatriotas->prox;
+                // TLSE_print_teste(vencedores_ano);
+                TLSE_free(vencedores_ano);
+                
+
             }
+            if(atleta) liberaAtleta(atleta);
+            compatriotas = compatriotas->prox;
+        }
             
-        
+        TLSE_free(aux);
 
 
     }
