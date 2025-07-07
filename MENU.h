@@ -21,6 +21,7 @@ void furou_ranking();
 void pontuacao_obtida_por_ano();
 void ranking_geral();
 void grand_slams_mesmo_ano();
+void ATP_final_por_ano();
 
 
 #endif

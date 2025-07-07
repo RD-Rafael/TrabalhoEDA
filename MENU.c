@@ -714,6 +714,187 @@ void grand_slams_mesmo_ano(){
 
 }
 
+int conta_grand_slams(ChampionsByYearTeste* champion) {
+    const char* grand_slams[4] = {
+        "Australian Open",
+        "French Open", 
+        "Wimbledon",
+        "US Open"
+    };
+    
+    int qtd_grand_slams = 0;
+    
+    for (int i = 0; i < 15 && champion->pontos[i] > 0; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (strcmp(champion->torneio[i], grand_slams[j]) == 0) {
+                qtd_grand_slams++;
+                break; 
+            }
+        }
+    }
+    
+    return qtd_grand_slams;
+}
+
+int get_pontuacao(ChampionsByYearTeste* a, TLSE* lse){
+
+    while (lse)
+    {   
+        ChampionsByYearTeste* champion = (ChampionsByYearTeste*)(lse->info);
+
+        if(strcmp(a->chave, champion->chave)==0) {
+            return champion->pontos[0];
+        };
+        lse = lse->prox;
+    }
+    
+}
+
+int compara_pontuacao_ATP_Finals(void* a, void* b, TLSE* ant){
+
+    ChampionsByYearTeste* x = (ChampionsByYearTeste*)a;
+    ChampionsByYearTeste* y = (ChampionsByYearTeste*)b;
+    
+
+   
+
+    if(y->pontos[0] == x->pontos[0]){
+
+        int x_slams = conta_grand_slams(x);
+        int y_slams = conta_grand_slams(y);
+
+        if(x_slams == y_slams){
+            return (get_pontuacao(y, ant) - get_pontuacao(x, ant));
+        }
+        return y_slams - x_slams;
+    }
+    
+
+    return y->pontos[0] - x->pontos[0];
+}
+
+void pre_processamento(void* a){
+
+    ChampionsByYearTeste* x = (ChampionsByYearTeste*)a;
+    
+    
+    for (int i = 1; i < 15; i++)
+    {   
+        x->pontos[0] += x->pontos[i]; 
+    }
+
+    int n = conta_grand_slams(x);
+    x->pontos[14] = n ? n : -1;
+
+}
+
+void ATP_final_por_ano(){
+
+    TLSE* lse = TLSE_inicializa();
+    TLSE* ant = TLSE_inicializa();
+    TLSE* iter;
+    TLSE* iter2;
+
+    // ant = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), 0);
+
+    ant = TLSE_cria_lista_fake_1990_simples();
+
+    for (int i = 1; i <= 34; i++)
+    {   
+
+        printf("\nAno de %d:\n", (1990+i));
+
+        lse = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
+
+
+        iter = lse;
+        int pos = 1;
+
+        // TLSE_print_teste(lse);
+
+        while (iter)
+        {   
+            pre_processamento(iter->info);
+            iter = iter->prox;
+        }
+        
+        lse = TLSE_ordena_ATP_Finals(lse, ant, compara_pontuacao_ATP_Finals);
+        iter2 = lse;
+
+        while (iter2) {
+
+            if(pos > 8) break;
+
+            TAtleta* atleta = TABM_busca("BMFiles/index.bin", ((ChampionsByYearTeste*)iter2->info)->chave);
+
+            if(atleta){
+                printf("%dº - %s - ", pos++, atleta->nome);
+        
+
+
+            }
+            else{
+
+                //Devido a erro de pessoas com mais de um sobrenome. Ponto a melhorar
+                printf("%dº - %s - ", pos++, ((ChampionsByYearTeste*)iter2->info)->chave);
+        
+
+            }
+            
+            printf("%d", ((ChampionsByYearTeste*)iter2->info)->pontos[0]);
+            printf("\n\n");
+
+            
+            iter2 = iter2->prox;
+
+            free(atleta);
+        }
+
+        // if(pos <= 8){
+        //     iter2 = ant;
+        //     while (iter2) {
+
+        //     if(pos > 8) break;
+
+        //     TAtleta* atleta = TABM_busca("BMFiles/index.bin", ((ChampionsByYearTeste*)iter2->info)->chave);
+
+        //     if(atleta){
+        //         printf("%dº - %s - ", pos++, atleta->nome);
+        //         printf("%d", ((ChampionsByYearTeste*)iter2->info)->pontos[0]);
+        
+        //         printf("\n\n");
+
+        //     }
+        //     else{
+
+        //         //Devido a erro de pessoas com mais de um sobrenome. Ponto a melhorar
+        //         printf("%dº - %s - ", pos++, ((ChampionsByYearTeste*)iter2->info)->chave);
+        //         printf("%d", ((ChampionsByYearTeste*)iter2->info)->pontos[0]);
+        
+        //         printf("\n\n");
+
+        //     }
+            
+            
+        //     iter2 = iter2->prox;
+
+        //     free(atleta);
+        // }
+
+        // }
+
+        TLSE_free(ant);
+        ant = TLSE_copy(lse);
+
+    }
+
+
+
+    TLSE_free(lse);
+    
+}
+
+
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){
 
     TLSE* lse = TLSE_inicializa();

@@ -48,9 +48,25 @@ int deal_with_same_input(FILE* arq_hash, void* new_data, void* file_data){
     ChampionsByYearTeste* new = (ChampionsByYearTeste*)new_data;
     ChampionsByYearTeste* old = (ChampionsByYearTeste*)file_data;
 
+    printf("Novo: %s | Antigo: %s\n", new->chave, old->chave);
+
     for (int i = 0; i < 15; i++)
     {
+        printf("O que tem %s - %d", old->torneio[i], old->pontos[i]);
+    }
+
+        printf("\nQuero adicionar %s - %d", new->torneio[0], new->pontos[0]);
+
+
+
+    printf("\n\n\n");
+    
+
+    for (int i = 0; i < 15; i++)
+    {   
         if(old->pontos[i] == 0){
+        printf("Adicionou o %s no %s\n", new->torneio[0], old->chave);
+
             old->pontos[i] = new->pontos[0];
             strcpy(old->torneio[i], new->torneio[0]);
             break;
@@ -63,6 +79,8 @@ int deal_with_same_input(FILE* arq_hash, void* new_data, void* file_data){
     fwrite(old, sizeof(ChampionsByYearTeste), 1, arq_hash);
     
     return 1; 
+
+    // return 0;
 }
 
 
@@ -120,11 +138,24 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
 
     ChampionsByYearTeste champions[15] = {0};
 
+    for (int j = 0; j < 15; j++)
+    {   
+        strcpy(champions[j].chave, "INEXISTENTE");
+        champions[j].prox = -1;
+        for(int i = 0; i < 15; i++) {
+        strcpy(champions[j].torneio[i], "-");
+                champions[j].pontos[i] = 0;
+    }
+    }
+    
+
     char linha[1000];
 
     fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
 
     int ano;
+
+    int i =0;
 
     while (fgets(linha, sizeof(linha), arq_dados))
     {   
@@ -168,7 +199,9 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
             
         }
 
+        i++;
 
+        // if(i > 1) break;
     }
     
 
@@ -184,10 +217,13 @@ int main(){
 
     ChampionsByYearTeste sentinela2 = { 
         .chave = "-", 
-        .torneio = "-",          
         .prox = INT_MIN 
     };
     
+     for(int i = 0; i < 15; i++) {
+        strcpy(sentinela2.torneio[i], "-");
+        sentinela2.pontos[i] = 0;
+    }
 
 
     // HASH_inicializa_generica("../arquivos/champions.txt", "hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), &sentinela2, preenche_hash, hash_ano, order);
