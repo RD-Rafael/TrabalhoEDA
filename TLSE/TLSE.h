@@ -2,6 +2,8 @@
 #define TLSE_H
 #include "../ATLETA.h"
 
+// typedef struct ChampionsByYear ChampionsByYear;
+
 typedef struct tlse{
     void* info;
     struct tlse * prox;
@@ -15,6 +17,7 @@ int TLSE_conta(TLSE* l);
 void TLSE_free(TLSE* lse);
 void TLSE_print_champion(TLSE* lse);
 TLSE* TLSE_ordena(TLSE* lse, int (*compara)(void* a, void* b));
+TLSE* TLSE_insere_nao_duplicado(TLSE* lse, void* info);
 
 
 #endif

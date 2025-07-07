@@ -56,7 +56,7 @@ void MENU_selecionaAcao(){
     printf("(5): Sair\n");
 
     int acao;
-    printf("Selecione uma das acoes acima:");
+    printf("Selecione uma das acoes acima:\n");
     scanf("%d", &acao);
     
     int ch = getchar();
@@ -76,11 +76,10 @@ void MENU_selecionaAcao(){
         case 4:
             printf("Qual tarefa deseja executar?\n");
             printf("(0): Remover todos os atletas de uma nacionalidade\n");
-            printf("(1): Buscar atleta\n");
-            printf("(2): Remover atleta\n");
-            printf("(3): Imprimir árvore\n");
-            printf("(4): Quem furou o ranking?\n");
-            printf("(5): Sair\n");
+            printf("(3): Ver a ranking geral de tenistas desde 1990\n");
+            printf("(4): Ver a ranking ano a ano(25 melhores) de tenistas desde 1990\n");
+            printf("(5): Quem furou o ranking?\n");
+            printf("(6): Sair\n");
 
             scanf("%d", &acao);
     
@@ -91,7 +90,13 @@ void MENU_selecionaAcao(){
             case 0:
                 retira_pais();
                 break;
+            case 3:
+                ranking_geral();
+                break;
             case 4:
+                pontuacao_obtida_por_ano();
+                break;
+            case 5:
                 furou_ranking();
                 break;
             
@@ -516,6 +521,136 @@ void furou_ranking(){
         printf("\nNão existiram casos de furo de ranking para a opção escolhida.\n");
     }
 
+}
+
+int compara_pontuacao(void* a, void* b){
+
+    ChampionsByYear* x = (ChampionsByYear*)a;
+    ChampionsByYear* y = (ChampionsByYear*)b;
+
+    return y->pontos - x->pontos;
+}
+
+void ranking_geral(){
+
+    TLSE* lse = TLSE_inicializa();
+    TLSE* output = TLSE_inicializa();
+    TLSE* iter;
+
+
+
+    for (int i = 1990; i <= 2024; i++)
+    {   
+        // printf("\nAno de %d:\n", i);
+        lse = HASH_busca_generica("./Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
+
+        iter = lse;
+        while(iter){
+        output = TLSE_insere_nao_duplicado(output, (iter->info));
+            iter = iter->prox;
+        }
+
+    }
+
+    TLSE_ordena(output, compara_pontuacao);
+
+    int pos = 1;
+    iter = output;
+    while (iter) {
+
+        TAtleta* atleta = TABM_busca("BMFiles/index.bin", ((ChampionsByYear*)iter->info)->chave);
+
+        if(atleta){
+            printf("%dº - %s - ", pos++, atleta->nome);
+            printf("%d", ((ChampionsByYear*)iter->info)->pontos);
+       
+            printf("\n\n");
+
+        }
+        else{
+
+            //Devido a erro de pessoas com mais de um sobrenome. Ponto a melhorar
+            printf("%dº - %s - ", pos++, ((ChampionsByYear*)iter->info)->chave);
+            printf("%d", ((ChampionsByYear*)iter->info)->pontos);
+       
+            printf("\n\n");
+
+        }
+        
+        
+        iter = iter->prox;
+
+        free(atleta);
+    }
+    TLSE_free(lse);
+    
+    // free(lse);
+}
+
+
+
+void pontuacao_obtida_por_ano(){
+
+    TLSE* lse = TLSE_inicializa();
+    TLSE* output = TLSE_inicializa();
+    TLSE* iter;
+    TLSE* iter2;
+
+
+
+    for (int i = 1990; i <= 2024; i++)
+    {   
+        printf("\nAno de %d:\n", i);
+        lse = HASH_busca_generica("./Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
+
+        iter = lse;
+        while(iter){
+            output = TLSE_insere_nao_duplicado(output, (iter->info));
+            iter = iter->prox;
+        }
+
+        iter2 = output;
+        int pos = 1;
+
+        TLSE_ordena(output, compara_pontuacao);
+
+        while (iter2) {
+
+            if(pos > 25) break;
+
+            TAtleta* atleta = TABM_busca("BMFiles/index.bin", ((ChampionsByYear*)iter2->info)->chave);
+
+            if(atleta){
+                printf("%dº - %s - ", pos++, atleta->nome);
+                printf("%d", ((ChampionsByYear*)iter2->info)->pontos);
+        
+                printf("\n\n");
+
+            }
+            else{
+
+                //Devido a erro de pessoas com mais de um sobrenome. Ponto a melhorar
+                printf("%dº - %s - ", pos++, ((ChampionsByYear*)iter2->info)->chave);
+                printf("%d", ((ChampionsByYear*)iter2->info)->pontos);
+        
+                printf("\n\n");
+
+            }
+            
+            
+            iter2 = iter2->prox;
+
+            free(atleta);
+        }
+
+    }
+
+    TLSE_ordena(output, compara_pontuacao);
+
+
+    TLSE_free(lse);
+    
+    // free(lse);
 }
 
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){

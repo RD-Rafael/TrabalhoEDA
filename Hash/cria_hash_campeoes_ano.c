@@ -5,33 +5,48 @@
 #include <limits.h>
 #include <stddef.h>
 
-
+int obter_pontuacao_torneio(int indice_torneio) {
+    switch(indice_torneio) {
+        // Grand Slams
+        case 0:  // Australian Open
+        case 1:  // French Open
+        case 2:  // Wimbledon
+        case 3:  // US Open
+            return 2000;
+        
+        // ATP Finals
+        case 4:  // ATP Finals
+            return 0;    // Pontuação especial/variável
+        
+        // Olympic Games
+        case 5:  // Olympic games
+            return 0;    // Sem pontuação ATP
+        
+        // ATP Masters 1000
+        case 6:  // Indian Wells
+        case 7:  // Miami
+        case 8:  // Monte Carlo
+        case 9:  // Madrid
+        case 10: // Rome
+        case 11: // Canada
+        case 12: // Cincinnati
+        case 13: // Shanghai
+        case 14: // Paris
+            return 1000;
+        
+        default:
+            return 0;
+    }
+}
 
 int order(void * a, void* b){
     return 1; //Só adiciona ao final
 }
 
 int deal_with_same_input(FILE* arq_hash, void* new_data, void* file_data){
-
-    Champion* new = (Champion*)new_data;
-    Champion* old = (Champion*)file_data;
-
-
-    int i = 0;
-    for (i = 0; i < 34; i++)
-    {
-        if(old->ano[i] == 0) break;
-    }
-
-    old->ano[i] = new->ano[0];
-
-
-    long current_pos = ftell(arq_hash);
-    fseek(arq_hash, current_pos - sizeof(Champion), SEEK_SET);
-    fwrite(old, sizeof(Champion), 1, arq_hash);
-    
-    return 1; 
+    return 0; //Passa sempre, não tem problema nesse caso 
 }
+
 
 // Função para substituir todas as ocorrências de "-" por "INEXISTENTE"
 void substituir_traco(char* linha) {
@@ -61,19 +76,37 @@ void substituir_traco(char* linha) {
     strcpy(linha, buffer);
 }
 
-void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+
+    const char* nomes_torneios[15] = {
+    "Australian Open",
+    "French Open", 
+    "Wimbledon",
+    "US Open",
+    "ATP Finals",
+    "Olympic games",
+    "Indian Wells",
+    "Miami",
+    "Monte Carlo",
+    "Madrid",
+    "Rome",
+    "Canada",
+    "Cincinnati",
+    "Shanghai",
+    "Paris"
+};
 
     FILE* arq_dados = fopen(nome_arq_dados, "r");
 
     
 
-    int ano;
-    Champion champions[15] = {0};
+    ChampionsByYear champions[15] = {0};
 
     char linha[1000];
 
     fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
 
+    int ano;
     int i = 0;
 
     while (fgets(linha, sizeof(linha), arq_dados))
@@ -106,11 +139,12 @@ void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_has
         for (int i = 0; i < 15; i++)
         {   
             if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
-                champions[i].ano[0] = ano;
+                strcpy(champions[i].torneio, nomes_torneios[i]);
+                champions[i].pontos = obter_pontuacao_torneio(i);
                 champions[i].prox = -1; 
 
               
-                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(Champion, prox), sizeof(Champion), i, ord_func, deal_with_same_input);
+                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(ChampionsByYear, prox), sizeof(ChampionsByYear), hash_func(ano), ord_func, deal_with_same_input);
 
 
             }
@@ -134,24 +168,22 @@ void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_has
 
 }
 
-int hashing(void* chave){
-    return 1;
-}
+
 
 
 int main(){
 
-    Champion sentinela2 = { 
+    ChampionsByYear sentinela2 = { 
         .chave = "-", 
-        .ano = {0},           //Inicializa todo o array com 0
+        .torneio = "-",          
         .prox = INT_MIN 
     };
     
 
 
-    HASH_inicializa_generica("../arquivos/champions.txt", "hash_por_torneio.hash", 15, sizeof(Champion), &sentinela2, preenche_hash_campeoes_por_torneio, hashing, order);
+    HASH_inicializa_generica("../arquivos/champions.txt", "hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), &sentinela2, preenche_hash, hash_ano, order);
 
-    HASH_print("hash_por_torneio.hash", 15, sizeof(Champion), offsetof(Champion, prox));
+    HASH_print("hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox));
     
 
     return 0;

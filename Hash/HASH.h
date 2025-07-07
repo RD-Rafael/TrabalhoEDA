@@ -10,6 +10,13 @@ typedef struct champion{
     int prox;
 }Champion;
 
+typedef struct championsbyyear{
+    char chave[35];
+    char torneio[35];
+    int pontos;
+    int prox;
+}ChampionsByYear;
+
 
 void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b));
 
@@ -21,6 +28,7 @@ TLSE* HASH_busca(char* nome_arq_hash, TAtleta atleta, int hash_func(void* chave)
 void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offset);
 
 int hash_nacionalidade(void* chave);
+int hash_ano(void* chave);
 
 
 void HASH_remove_global(void* data);

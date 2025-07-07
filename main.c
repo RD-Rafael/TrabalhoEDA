@@ -17,7 +17,7 @@ int main(){
     // retira_pais();
 
     // maiores_campeoes_torneio();
-    furou_ranking();
+    // furou_ranking();
 
     // TAtleta* x = TABM_busca("BMFiles/index.bin", "Steeb");
 
@@ -30,6 +30,9 @@ int main(){
     //TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
     //printf("%d\n", TABM_no_count("BMFiles/index.bin"));
 
+    while(1){
+        MENU_selecionaAcao();
+    }
     // MENU_selecionaAcao();
  
 

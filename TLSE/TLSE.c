@@ -13,10 +13,36 @@ TLSE* TLSE_inicializa(){
 
 TLSE* TLSE_insere_inicio(TLSE* lse, void* info) {
     TLSE* novo = (TLSE*)malloc(sizeof(TLSE));
-    if (!novo) return lse;
     novo->info = info;
     novo->prox = lse;
     return novo;
+}
+
+TLSE* TLSE_insere_nao_duplicado(TLSE* output, void* new) {
+
+    ChampionsByYear* new_data = (ChampionsByYear*)(new);
+    TLSE* iter = output;
+    TLSE* ant = NULL;
+    while(iter){
+
+        ChampionsByYear* champion = ((ChampionsByYear*)(iter->info));
+        if(strcmp(champion->chave, new_data->chave)==0){
+            champion->pontos += new_data->pontos;
+            return output;
+        }
+
+        ant = iter;
+        iter = iter->prox;
+    }
+
+    TLSE* novo = (TLSE*)malloc(sizeof(TLSE));
+    novo->info = new;
+    novo->prox = NULL;
+    if(!ant) return novo;
+
+    ant->prox = novo;
+    
+    return output;
 }
 
 // TLSE* TLSE_busca(TLSE* lse, int n) {
@@ -36,14 +62,10 @@ void TLSE_print(TLSE* lse) {
 
 void TLSE_print_champion(TLSE* lse) {
     while (lse) {
-        printf("%s - ", ((Champion*)lse->info)->chave);
-        printf("Campeão em");
-        for (int i = 0; i < 34; i++)
-        {   
-            if(((Champion*)lse->info)->ano[i] == 0) break;
-            printf(" %d,", ((Champion*)lse->info)->ano[i]);
-        }
-
+        printf("%s - ", ((ChampionsByYear*)lse->info)->chave);
+        printf("%s - ", ((ChampionsByYear*)lse->info)->torneio);
+        printf("%d - ", ((ChampionsByYear*)lse->info)->pontos);
+       
         printf("\n\n");
         
         lse = lse->prox;

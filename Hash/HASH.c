@@ -84,6 +84,12 @@ int hash_nacionalidade(void *chave)
     else return 0;  
 }
 
+int hash_ano(void* chave){
+
+    int ano = *(int*)chave;
+    return (ano - 1990);
+}
+
 int hash_torneio(void *chave){
     return 1;
 }
@@ -478,7 +484,7 @@ void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offse
     {
         fseek(arq_hash, register_size*i, SEEK_SET);
         fread(aux, register_size, 1, arq_hash);
-        printf("%p", aux);
+        printf("%s", (char*)aux);
 
         int* aux_prox = (int*)((char*)aux + prox_offset);
         while (*aux_prox != INT_MIN && *aux_prox != -1 )
@@ -486,7 +492,7 @@ void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offse
             printf("-->");
             fseek(arq_hash, *aux_prox, SEEK_SET);
             fread(aux, register_size, 1, arq_hash);
-            printf("%p", aux);
+            printf("%s", (char*)aux);
         }
 
         printf("\n\n\n");
@@ -756,6 +762,7 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
     fseek(arq_hash, register_size*hash, SEEK_SET);
     fread(aux, register_size, 1, arq_hash);
 
+
     lse = TLSE_insere_inicio(lse, aux);
 
     int* aux_prox = (int*)((char*)aux + prox_offset);
@@ -774,6 +781,8 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
         aux_prox = (int*)((char*)aux + prox_offset);
 
         lse = TLSE_insere_inicio(lse, aux);
+
+        // printf("%s\n", (char*)(aux));
 
     }
 

@@ -121,7 +121,6 @@ void TABM_leitura_arq(char* nomeArq, char* nomeIdx){
         }
 
         TAtleta* atleta = novoAtleta(nome, birth, death, nationality, bestRank, bestRankYear, weeksTop1);
-        if(strcmp(nome, "Carl-Uwe Steeb") == 0) printf("\n%s\n\n", atleta->chave);
 
         TABM_insere(nomeIdx, atleta);
         //printf("\nInserido: %s count: %d\n", atleta->nome, TABM_no_count(nomeIdx));

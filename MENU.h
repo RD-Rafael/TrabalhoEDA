@@ -16,6 +16,8 @@ void retira_pais();
 void nasceu_com_compatriota_campeão();
 void maiores_campeoes_torneio();
 void furou_ranking();
+void pontuacao_obtida_por_ano();
+void ranking_geral();
 
 
 #endif
