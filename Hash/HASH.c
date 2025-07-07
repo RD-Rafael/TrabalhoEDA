@@ -5,6 +5,8 @@
 #include "../ATLETA.h"
 #include "../TLSE/TLSE.h"
 #include <limits.h>
+#include <stddef.h>
+
 
 
 typedef struct hashs{
@@ -220,10 +222,6 @@ void inicializa_arq_hash_vazio_generica(char* nome_arq_hash, int hash_size, int 
 void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b), int (*deal_with_same_input)(FILE* arq_hash, void* new_data, void* file_data)){
 
 
-    // printf("%d\n", hash);
-    // printf("Insercao de: %s\n", (char*)data);
-
-
     FILE* arq_hash = fopen(nome_arq_hash, "rb+");
 
 
@@ -233,15 +231,9 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
     fread(aux, register_size, 1, arq_hash);
 
     int* aux_prox = ((int*)((char*)aux + prox_offset));
-    // printf("\n\n%d\n\n", *aux_prox);
 
 
-    if(*(aux_prox) == INT_MIN){
-
-    // printf("%s entrou aqui no INT_MIN\n", (char*)data);
-
-
-        
+    if(*(aux_prox) == INT_MIN){        
         fseek(arq_hash, register_size*hash, SEEK_SET);
         fwrite(data, register_size, 1, arq_hash);
         fseek(arq_hash, 0, SEEK_SET);
@@ -249,12 +241,10 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
         fclose(arq_hash);
         return;
     }
-    printf("\n\nStrings 1: %s = %s\n\n", (char*)data, (char*)aux);
+
     //Colisão, percorrer lista até o fim
     while (ord_func(data, aux) > 0 && *aux_prox != -1)
     {   
-    printf("\n\nStrings 2: %s = %s\n\n", (char*)data, (char*)aux);
-    // printf("%s entrou aqui no INT_MIN\n", (char*)data);
      
         if(strcmp((char*)data, (char*)aux) == 0) break;
 
@@ -271,8 +261,6 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
     }
 
     if(strcmp((char*)data, (char*)aux) == 0){
-            // printf("\n\nStrings analise: %s = %s\n\n", (char*)data, (char*)aux);
-
             int res = deal_with_same_input(arq_hash, data, aux);
             if(res) {
                 fclose(arq_hash);
@@ -287,8 +275,6 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
     fseek(arq_hash, 0, SEEK_END);
 
     if(*aux_prox == -1 && ord_func(data, aux) > 0){
-    // printf("%s entrou aqui no -1\n", (char*)data);
-
 
         *aux_prox = ftell(arq_hash);
         fseek(arq_hash, ant, SEEK_SET);
@@ -300,30 +286,17 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
 
     }
     else{
-
-    // printf("%s entrou aqui no else\n", (char*)data);
-
     
         int * data_prox = ((int*)((char*)data + prox_offset));
         *data_prox = *aux_prox;
 
         *aux_prox = ftell(arq_hash);
 
-        // printf("ftell = %d\n", *aux_prox/register_size);
-
-
-
         fwrite(data, register_size, 1, arq_hash);
-
-        
-
 
         fseek(arq_hash, ant, SEEK_SET);
 
         fwrite(aux, register_size, 1, arq_hash);
-
-
-
     }
 
     free(aux);
@@ -379,9 +352,6 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
         aux_prox = (int*)((char*)aux + prox_offset);
 
         lse = TLSE_insere_inicio(lse, aux);
-
-        // printf("%s\n", (char*)(aux));
-
     }
 
 
@@ -439,6 +409,307 @@ TLSE* HASH_busca_com_hash(char* nome_arq_hash, int register_size, int prox_offse
     return lse;
 
 
+}
+
+int obter_pontuacao_torneio(int indice_torneio) {
+    switch(indice_torneio) {
+        // Grand Slams
+        case 0:  // Australian Open
+        case 1:  // French Open
+        case 2:  // Wimbledon
+        case 3:  // US Open
+            return 2000;
+        
+        // ATP Finals
+        case 4:  // ATP Finals
+            return 0;    // Pontuação especial/variável
+        
+        // Olympic Games
+        case 5:  // Olympic games
+            return 0;    // Sem pontuação ATP
+        
+        // ATP Masters 1000
+        case 6:  // Indian Wells
+        case 7:  // Miami
+        case 8:  // Monte Carlo
+        case 9:  // Madrid
+        case 10: // Rome
+        case 11: // Canada
+        case 12: // Cincinnati
+        case 13: // Shanghai
+        case 14: // Paris
+            return 1000;
+        
+        default:
+            return 0;
+    }
+}
+
+int order(void * a, void* b){
+    return 1; //Só adiciona ao final
+}
+
+int deal_with_same_input_campeoes_ano(FILE* arq_hash, void* new_data, void* file_data){
+
+    ChampionsByYearTeste* new = (ChampionsByYearTeste*)new_data;
+    ChampionsByYearTeste* old = (ChampionsByYearTeste*)file_data;
+
+    
+
+    for (int i = 0; i < 15; i++)
+    {   
+        if(old->pontos[i] == 0){
+            old->pontos[i] = new->pontos[0];
+            strcpy(old->torneio[i], new->torneio[0]);
+            break;
+        }
+    }
+    
+
+    long current_pos = ftell(arq_hash);
+    fseek(arq_hash, current_pos - sizeof(ChampionsByYearTeste), SEEK_SET);
+    fwrite(old, sizeof(ChampionsByYearTeste), 1, arq_hash);
+    
+    return 1; 
+
+}
+
+
+// Função para substituir todas as ocorrências de "-" por "INEXISTENTE"
+void substituir_traco(char* linha) {
+    char* pos;
+    char buffer[1000];
+    char* src = linha;
+    char* dst = buffer;
+    
+    while ((pos = strstr(src, "\\-\\")) != NULL) {
+        // Copia tudo até o "-"
+        int len_antes = pos - src;
+        memcpy(dst, src, len_antes);
+        dst += len_antes;
+        
+        // Adiciona "INEXISTENTE" em vez de "-"
+        strcpy(dst, "\\INEXISTENTE ()\\");
+        dst += strlen("\\INEXISTENTE ()\\");
+        
+        // Move para depois do "-"
+        src = pos + 3; // pula "\\-\\"
+    }
+    
+    // Copia o resto da string
+    strcpy(dst, src);
+    
+    // Copia de volta para a linha original
+    strcpy(linha, buffer);
+}
+
+void preenche_hash_por_ano(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+
+    const char* nomes_torneios[15] = {
+    "Australian Open",
+    "French Open", 
+    "Wimbledon",
+    "US Open",
+    "ATP Finals",
+    "Olympic games",
+    "Indian Wells",
+    "Miami",
+    "Monte Carlo",
+    "Madrid",
+    "Rome",
+    "Canada",
+    "Cincinnati",
+    "Shanghai",
+    "Paris"
+};
+
+    FILE* arq_dados = fopen(nome_arq_dados, "r");
+
+    
+
+    ChampionsByYearTeste champions[15] = {0};
+
+    for (int j = 0; j < 15; j++)
+    {   
+        strcpy(champions[j].chave, "INEXISTENTE");
+        champions[j].prox = -1;
+        for(int i = 0; i < 15; i++) {
+        strcpy(champions[j].torneio[i], "-");
+                champions[j].pontos[i] = 0;
+    }
+    }
+    
+
+    char linha[1000];
+
+    fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
+
+    int ano;
+
+
+    while (fgets(linha, sizeof(linha), arq_dados))
+    {   
+        substituir_traco(linha);
+
+         int ok = sscanf(linha,
+            "%d"                      /* ano */
+            "\\%[^\\ (]%*[^\\]"      /* 0  Australian Open  */
+            "\\%[^\\ (]%*[^\\]"      /* 1  French Open      */
+            "\\%[^\\ (]%*[^\\]"      /* 2  Wimbledon        */
+            "\\%[^\\ (]%*[^\\]"      /* 3  US Open          */
+            "\\%[^\\ (]%*[^\\]"      /* 4  ATP Finals       */
+            "\\%[^\\ (]%*[^\\]"      /* 5  Olympic Games    */
+            "\\%[^\\ (]%*[^\\]"      /* 6  Indian Wells     */
+            "\\%[^\\ (]%*[^\\]"      /* 7  Miami            */
+            "\\%[^\\ (]%*[^\\]"      /* 8  Monte Carlo      */
+            "\\%[^\\ (]%*[^\\]"      /* 9  Madrid           */
+            "\\%[^\\ (]%*[^\\]"      /* 10 Rome            */
+            "\\%[^\\ (]%*[^\\]"      /* 11 Canada          */
+            "\\%[^\\ (]%*[^\\]"      /* 12 Cincinnati      */
+            "\\%[^\\ (]%*[^\\]"      /* 13 Shanghai        */
+            "\\%[^\\ (]%*[^\\]"      /* 14 Paris           */
+            , &ano,
+            champions[0].chave, champions[1].chave, champions[2].chave, champions[3].chave, champions[4].chave,
+            champions[5].chave, champions[6].chave, champions[7].chave, champions[8].chave, champions[9].chave,
+            champions[10].chave, champions[11].chave, champions[12].chave, champions[13].chave, champions[14].chave);
+
+        for (int i = 0; i < 15; i++)
+        {   
+            if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
+                strcpy(champions[i].torneio[0], nomes_torneios[i]);
+                champions[i].pontos[0] = obter_pontuacao_torneio(i);
+                champions[i].prox = -1; 
+
+              
+                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(ChampionsByYearTeste, prox), sizeof(ChampionsByYearTeste), hash_func(&ano), ord_func, deal_with_same_input_campeoes_ano);
+
+
+            }
+            
+        }
+
+    }
+    
+
+    fclose(arq_dados);
+
+
+}
+
+
+
+void cria_hash_campeoes_por_ano(char* caminho_arq_dados, char* caminho_dest_hash){
+    ChampionsByYearTeste sentinela2 = { 
+        .chave = "-", 
+        .prox = INT_MIN 
+    };
+    
+     for(int i = 0; i < 15; i++) {
+        strcpy(sentinela2.torneio[i], "-");
+        sentinela2.pontos[i] = 0;
+    }
+
+    HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 35, sizeof(ChampionsByYearTeste), &sentinela2, preenche_hash_por_ano, hash_ano, order);
+}
+
+
+int deal_with_same_input_por_torneio(FILE* arq_hash, void* new_data, void* file_data){
+
+    Champion* new = (Champion*)new_data;
+    Champion* old = (Champion*)file_data;
+
+
+    int i = 0;
+    for (i = 0; i < 34; i++)
+    {
+        if(old->ano[i] == 0) break;
+    }
+
+    old->ano[i] = new->ano[0];
+
+
+    long current_pos = ftell(arq_hash);
+    fseek(arq_hash, current_pos - sizeof(Champion), SEEK_SET);
+    fwrite(old, sizeof(Champion), 1, arq_hash);
+    
+    return 1; 
+}
+
+
+void preenche_hash_campeoes_por_torneio(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+
+    FILE* arq_dados = fopen(nome_arq_dados, "r");
+
+    
+
+    int ano;
+    Champion champions[15] = {0};
+
+    char linha[1000];
+
+    fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
+
+
+    while (fgets(linha, sizeof(linha), arq_dados))
+    {   
+        substituir_traco(linha);
+
+         int ok = sscanf(linha,
+            "%d"                      /* ano */
+            "\\%[^\\ (]%*[^\\]"      /* 0  Australian Open  */
+            "\\%[^\\ (]%*[^\\]"      /* 1  French Open      */
+            "\\%[^\\ (]%*[^\\]"      /* 2  Wimbledon        */
+            "\\%[^\\ (]%*[^\\]"      /* 3  US Open          */
+            "\\%[^\\ (]%*[^\\]"      /* 4  ATP Finals       */
+            "\\%[^\\ (]%*[^\\]"      /* 5  Olympic Games    */
+            "\\%[^\\ (]%*[^\\]"      /* 6  Indian Wells     */
+            "\\%[^\\ (]%*[^\\]"      /* 7  Miami            */
+            "\\%[^\\ (]%*[^\\]"      /* 8  Monte Carlo      */
+            "\\%[^\\ (]%*[^\\]"      /* 9  Madrid           */
+            "\\%[^\\ (]%*[^\\]"      /* 10 Rome            */
+            "\\%[^\\ (]%*[^\\]"      /* 11 Canada          */
+            "\\%[^\\ (]%*[^\\]"      /* 12 Cincinnati      */
+            "\\%[^\\ (]%*[^\\]"      /* 13 Shanghai        */
+            "\\%[^\\ (]%*[^\\]"      /* 14 Paris           */
+            , &ano,
+            champions[0].chave, champions[1].chave, champions[2].chave, champions[3].chave, champions[4].chave,
+            champions[5].chave, champions[6].chave, champions[7].chave, champions[8].chave, champions[9].chave,
+            champions[10].chave, champions[11].chave, champions[12].chave, champions[13].chave, champions[14].chave);
+
+        for (int i = 0; i < 15; i++)
+        {   
+            if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
+                champions[i].ano[0] = ano;
+                champions[i].prox = -1; 
+
+              
+                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(Champion, prox), sizeof(Champion), i, ord_func, deal_with_same_input_por_torneio);
+
+
+            }
+            
+        }
+    }
+    
+    fclose(arq_dados);
+}
+
+int hashing(void* chave){
+    return 1;
+}
+
+
+void cria_hash_por_torneio(char* caminho_arq_dados, char* caminho_dest_hash){
+
+    Champion sentinela2 = { 
+        .chave = "-", 
+        .ano = {0},           //Inicializa todo o array com 0
+        .prox = INT_MIN 
+    };
+    
+
+
+    HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 15, sizeof(Champion), &sentinela2, preenche_hash_campeoes_por_torneio, hashing, order);
 }
 
 

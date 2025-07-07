@@ -25,12 +25,6 @@ typedef struct championsbyyearteste{
 }ChampionsByYearTeste;
 
 
-void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b));
-
-void HASH_inicializa_champions(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b));
-// void HASH_remove(char* nome_arq_hash, TAtleta* atleta, int hash_func(void* chave));
-
-TLSE* HASH_busca(char* nome_arq_hash, TAtleta atleta, int hash_func(void* chave));
 
 void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offset);
 
@@ -47,5 +41,8 @@ void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int
 TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, int prox_offset, int hash_func(void* chave));
 
 TLSE* HASH_busca_com_hash(char* nome_arq_hash, int register_size, int prox_offset, int hash);
+
+void cria_hash_campeoes_por_ano(char* caminho_arq_dados, char* caminho_dest_hash);
+void cria_hash_por_torneio(char* caminho_arq_dados, char* caminho_dest_hash);
 
 #endif 

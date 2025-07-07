@@ -75,12 +75,15 @@ void MENU_selecionaAcao(){
             break;
         case 4:
             printf("Qual tarefa deseja executar?\n");
-            printf("(0): Remover todos os atletas de uma nacionalidade\n");
+            printf("(2): Ver jogadores que nasceram no mesmo ano em que um de seus compatriotas ganhou um Grand Slam\n");
             printf("(3): Ver a ranking geral de tenistas desde 1990\n");
             printf("(4): Ver a ranking ano a ano(25 melhores) de tenistas desde 1990\n");
-            printf("(5): Quem furou o ranking?\n");
-            printf("(8): Ver todos os vencedores, em ordem decrescente, por torneio?\n");
-            printf("(6): Sair\n");
+            printf("(5): Ver lista de jogadores que venceram todos os Grand Slams no mesmo ano\n");
+            printf("(6): Ver lista de quem furou o ranking, isto é, ganhou algum torneio, mas não estava no ranking (até 25\n");
+            printf("(7): Retirar todos os jogadores de determinada nacionalidade\n");
+            printf("(8): Listar 8 melhores jogadores de cada ano\n");
+            printf("(9): Ver todos os vencedores, em ordem decrescente, por torneio\n");
+            printf("(10): Sair\n");
 
             scanf("%d", &acao);
     
@@ -88,8 +91,11 @@ void MENU_selecionaAcao(){
 
             switch (acao)
             {
-            case 0:
-                retira_pais();
+            case 1:
+                // retira_pais();
+                break;
+            case 2:
+                nasceu_com_compatriota_campeao_new();
                 break;
             case 3:
                 ranking_geral();
@@ -98,10 +104,22 @@ void MENU_selecionaAcao(){
                 pontuacao_obtida_por_ano();
                 break;
             case 5:
+                grand_slams_mesmo_ano();
+                break;
+            case 6:
                 furou_ranking();
                 break;
+            case 7:
+                retira_pais();
+                break;
             case 8:
+                ATP_final_por_ano();
+                break;
+            case 9:
                 maiores_campeoes_torneio();
+                break;
+            case 10:
+                printf("Saindo da tarefa...\n");
                 break;
             
             default:

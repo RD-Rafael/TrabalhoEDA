@@ -28,7 +28,6 @@ TLSE* TLSE_insere_nao_duplicado(TLSE* output, void* new) {
         ChampionsByYear* champion = ((ChampionsByYear*)(iter->info));
         if(strcmp(champion->chave, new_data->chave)==0){
             champion->pontos += new_data->pontos;
-            // free(new_data);
             return output;
         }
 
@@ -46,13 +45,6 @@ TLSE* TLSE_insere_nao_duplicado(TLSE* output, void* new) {
     return output;
 }
 
-// TLSE* TLSE_busca(TLSE* lse, int n) {
-//     while (lse) {
-//         if (lse->info == n) return lse;
-//         lse = lse->prox;
-//     }
-//     return NULL;
-// }
 
 void TLSE_print(TLSE* lse) {
     while (lse) {
@@ -88,7 +80,6 @@ void TLSE_print_teste(TLSE* lse) {
         for (int i = 0; (champion->pontos[i] != 0 && i<15); i++)
         {
             printf("- %s ", ((ChampionsByYearTeste*)lse->info)->torneio[i]);
-            // printf("%d - ", ((ChampionsByYearTeste*)lse->info)->pontos[i]);
         }
         
         

@@ -1,4 +1,5 @@
 #include "TABM.h"
+#include "Hash/HASH.h"
 #include "MENU.h"
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -14,18 +15,17 @@ int main(){
     TABM_inicializa("BMFiles/index.bin");
     TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
 
-    // grand_slams_mesmo_ano();
+    cria_hash_campeoes_por_ano("arquivos/champions.txt", "Tabelas_Hash/TESTE.hash");
+    cria_hash_por_torneio("arquivos/champions.txt", "Tabelas_Hash/TESTE2.hash");
 
-    // ATP_final_por_ano();
-
-    nasceu_com_compatriota_campeao_new();
+    // nasceu_com_compatriota_campeao_new();
     
     //TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
     //printf("%d\n", TABM_no_count("BMFiles/index.bin"));
 
-    // while(1){
-    //     MENU_selecionaAcao();
-    // }
+    while(1){
+        MENU_selecionaAcao();
+    }
  
 
     return 0;
