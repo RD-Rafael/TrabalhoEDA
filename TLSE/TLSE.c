@@ -60,11 +60,29 @@ void TLSE_print(TLSE* lse) {
     }
 }
 
+void TLSE_print_maiores_campeoes(TLSE* lse) {
+    while (lse) {
+
+        Champion* champion = ((Champion*)lse->info);
+        printf("%s ", champion->chave);
+
+        for (int i = 0; champion->ano[i] != 0; i++)
+        {
+            printf("- %d ", champion->ano[i]);
+
+        }
+     
+        printf("\n\n");
+        
+        lse = lse->prox;
+    }
+}
+
 void TLSE_print_champion(TLSE* lse) {
     while (lse) {
         printf("%s - ", ((ChampionsByYear*)lse->info)->chave);
-        printf("%s - ", ((ChampionsByYear*)lse->info)->torneio);
-        printf("%d - ", ((ChampionsByYear*)lse->info)->pontos);
+        // printf("%s - ", ((ChampionsByYear*)lse->info)->torneio);
+        // printf("%d - ", ((ChampionsByYear*)lse->info)->pontos);
        
         printf("\n\n");
         

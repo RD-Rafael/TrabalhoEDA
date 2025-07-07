@@ -79,6 +79,7 @@ void MENU_selecionaAcao(){
             printf("(3): Ver a ranking geral de tenistas desde 1990\n");
             printf("(4): Ver a ranking ano a ano(25 melhores) de tenistas desde 1990\n");
             printf("(5): Quem furou o ranking?\n");
+            printf("(8): Ver todos os vencedores, em ordem decrescente, por torneio?\n");
             printf("(6): Sair\n");
 
             scanf("%d", &acao);
@@ -98,6 +99,9 @@ void MENU_selecionaAcao(){
                 break;
             case 5:
                 furou_ranking();
+                break;
+            case 8:
+                maiores_campeoes_torneio();
                 break;
             
             default:
@@ -412,7 +416,7 @@ void maiores_campeoes_torneio(){
 
         TLSE_ordena(lse, compara);
 
-        TLSE_print_champion(lse);
+        TLSE_print_maiores_campeoes(lse);
     }
     
 }
