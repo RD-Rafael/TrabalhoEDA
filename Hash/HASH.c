@@ -102,6 +102,8 @@ void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_of
 
     void* aux = malloc(register_size);
     void* ant = malloc(register_size);
+    memset(aux, 0, register_size);
+    memset(ant, 0, register_size);
 
     // strcpy(ant.nome, "-");
     // ant.prox = INT_MIN;
@@ -136,6 +138,7 @@ void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_of
         } 
         else {
             void* vazio = malloc(register_size);
+            memset(vazio, 0, register_size);
             int* vazio_prox = (int*)((char*)vazio + prox_offset);
             strcpy(vazio, "-");
             *vazio_prox = INT_MIN;
@@ -156,6 +159,9 @@ void HASH_remove(char* nome_arq_hash, void* data, int register_size, int prox_of
         printf("\nAtleta não encontrado na tabela %s\n", nome_arq_hash);
     }
 
+    free(aux);
+    free(ant);
+
     fclose(arq_hash);
 }
 
@@ -166,7 +172,7 @@ void HASH_remove_global(void* data){
     {"Hash/hash_por_nacionalidade.hash", hash_nacionalidade, 40, 36},
     // {"Hash/hash_por_torneio.hash", hash_torneio, 44, 40}, Retirar daqui faz sentido?
 
-};
+    };
 
     for (int i = 0; i < sizeof(tabelas_sistema)/sizeof(tabelas_sistema[0]); i++)
     {
@@ -386,6 +392,7 @@ TLSE* HASH_busca_com_hash(char* nome_arq_hash, int register_size, int prox_offse
 
     int* aux_prox = (int*)((char*)aux + prox_offset);
 
+
     int offset = 0;
     while(*aux_prox != -1 && *aux_prox != INT_MIN ){
 
@@ -401,6 +408,7 @@ TLSE* HASH_busca_com_hash(char* nome_arq_hash, int register_size, int prox_offse
 
         lse = TLSE_insere_inicio(lse, aux);
 
+        //free(aux);
     }
 
 

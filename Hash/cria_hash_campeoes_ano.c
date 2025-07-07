@@ -130,7 +130,7 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
     "Cincinnati",
     "Shanghai",
     "Paris"
-};
+    };
 
     FILE* arq_dados = fopen(nome_arq_dados, "r");
 
@@ -186,7 +186,7 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
 
         for (int i = 0; i < 15; i++)
         {   
-            if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
+            if(strcmp(champions[i].chave, "-") != 0){
                 strcpy(champions[i].torneio[0], nomes_torneios[i]);
                 champions[i].pontos[0] = obter_pontuacao_torneio(i);
                 champions[i].prox = -1; 

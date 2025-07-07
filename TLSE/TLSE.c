@@ -28,6 +28,7 @@ TLSE* TLSE_insere_nao_duplicado(TLSE* output, void* new) {
         ChampionsByYear* champion = ((ChampionsByYear*)(iter->info));
         if(strcmp(champion->chave, new_data->chave)==0){
             champion->pontos += new_data->pontos;
+            free(new);
             return output;
         }
 
