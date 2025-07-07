@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stddef.h>
 
+// const char* CAMINHO_HASHES = "Tabelas_Hash";
 
 char* getNacionalidade(int n){
     FILE* fp = fopen("nationalities.txt", "r");
@@ -83,7 +84,7 @@ void MENU_selecionaAcao(){
             printf("(7): Retirar todos os jogadores de determinada nacionalidade\n");
             printf("(8): Listar 8 melhores jogadores de cada ano\n");
             printf("(9): Ver todos os vencedores, em ordem decrescente, por torneio\n");
-            printf("(10): Sair\n");
+            printf("(10): Voltar ao menu principal\n");
 
             scanf("%d", &acao);
     
@@ -357,7 +358,8 @@ void nasceu_com_compatriota_campeão(){
     {   
         strcpy(atleta_temp.nacionalidade, nacionalidades_hash[i]);
 
-        lse = HASH_busca_generica("./Hash/hash_por_nacionalidade.hash", &atleta_temp, register_size, prox_offset, hash_nacionalidade);
+
+        lse = HASH_busca_generica("Tabelas_Hash/hash_por_nacionalidade.hash", &atleta_temp, register_size, prox_offset, hash_nacionalidade);
 
         TLSE* old = lse;
 
@@ -685,7 +687,7 @@ void grand_slams_mesmo_ano(){
 
     for (int i = 0; i <= 34; i++)
     {   
-        lse = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
+        lse = HASH_busca_com_hash("./Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
 
         iter = lse;
 
@@ -822,7 +824,7 @@ void ATP_final_por_ano(){
 
         printf("\nAno de %d:\n", (1990+i));
 
-        lse = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
+        lse = HASH_busca_com_hash("./Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
 
 
         iter = lse;
@@ -974,14 +976,14 @@ void nasceu_com_compatriota_campeao_new(){
     for (int i = 0; i < sizeof(nacionalidades_hash)/sizeof(nacionalidades_hash)[0]; i++){
 
         strcpy(temp.nacionalidade, nacionalidades_hash[i]);
-        TLSE* compatriotas = HASH_busca_generica("Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
+        TLSE* compatriotas = HASH_busca_generica("Tabelas_Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
 
         while(compatriotas){
             
             TAtleta*atleta  = TABM_busca("BMFiles/index.bin", compatriotas->info);
 
             if(atleta && atleta->anoNascimento >= 1990){
-                TLSE* vencedores_ano = HASH_busca_com_hash("Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), (atleta->anoNascimento-1990));
+                TLSE* vencedores_ano = HASH_busca_com_hash("Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), (atleta->anoNascimento-1990));
                 
 
                  TLSE* iter = compatriotas;
@@ -994,7 +996,6 @@ void nasceu_com_compatriota_campeao_new(){
                      iter = iter->prox;
                  }
 
-                 // TLSE_print_teste(vencedores_ano);
 
             }
                 
@@ -1004,7 +1005,6 @@ void nasceu_com_compatriota_campeao_new(){
         
 
 
-        // break;
     }
 
 }
