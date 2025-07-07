@@ -79,7 +79,7 @@ void MENU_selecionaAcao(){
             printf("(1): Buscar atleta\n");
             printf("(2): Remover atleta\n");
             printf("(3): Imprimir árvore\n");
-            printf("(4): Resolver questão\n");
+            printf("(4): Quem furou o ranking?\n");
             printf("(5): Sair\n");
 
             scanf("%d", &acao);
@@ -90,6 +90,9 @@ void MENU_selecionaAcao(){
             {
             case 0:
                 retira_pais();
+                break;
+            case 4:
+                furou_ranking();
                 break;
             
             default:
@@ -238,7 +241,7 @@ void retira_pais(){
 
         TAtleta* atleta = TABM_busca("BMFiles/index.bin", lse->info);
 
-        if(!atleta) printf("Aviso: Atleta %s não encontrado na base de dados\n", lse->info);
+        if(!atleta) printf("Aviso: Atleta %s não encontrado na base de dados\n", ((TAtleta*)(lse->info))->nome);
         else{
             TABM_retira("BMFiles/index.bin", lse->info);
             HASH_remove_global((void*)atleta);
@@ -375,9 +378,9 @@ int compara(void* a, void* b){
 
 void maiores_campeoes_torneio(){
 
-    TLSE* lse = TLSE_inicializa;
+    TLSE* lse = TLSE_inicializa();
 
-    TLSE* output = TLSE_inicializa;
+    TLSE* output = TLSE_inicializa();
 
     const char* nomes_torneios[15] = {
     "Australian Open",
@@ -411,6 +414,108 @@ void maiores_campeoes_torneio(){
         TLSE_print_champion(lse);
     }
     
+}
+
+void furou_ranking(){
+
+    char tipo_torneio[35];
+    
+    printf("\n\nSe algum jogador ganhou algum torneio, mas não estava no ranking (até 25), ele 'furou' o ranking.\nGostaria de ver os atletas que se encaixam nessa definição considerando quais títulos?:\n\n(0) Grand Slams\n(1) ATP Finals\n(2) Olimpíadas\n(3) ATP 1000\n");
+    int opcao;
+    scanf("%d", &opcao);
+
+    int inf, sup;
+    printf("****Casos de furo de ranking em ");
+
+    switch (opcao) {
+        case 0:
+            printf("Grand Slams");
+            inf = 0;
+            sup = 3;
+            break;
+        case 1:
+            printf("ATP Finals");
+            inf = 4;
+            sup = 4;
+            break;
+        case 2:
+            printf("Olimpíadas");
+            inf = 5;
+            sup = 5;
+            break;
+        case 3:
+            printf("ATP 1000");
+            inf = 6;
+            sup = 14;
+            break;
+      
+        default:
+            printf("Opção inválida!\n");
+            return;
+    }
+
+    printf("****:\n\n");
+
+
+    TLSE* lse = TLSE_inicializa();
+
+
+    const char* nomes_torneios[15] = {
+    "Australian Open",
+    "French Open", 
+    "Wimbledon",
+    "US Open",
+    "ATP Finals",
+    "Olympic games",
+    "Indian Wells",
+    "Miami",
+    "Monte Carlo",
+    "Madrid",
+    "Rome",
+    "Canada",
+    "Cincinnati",
+    "Shanghai",
+    "Paris"
+};  
+
+    int teve_caso = 0;
+
+    for (int i = inf; i <=sup; i++)
+    {   
+        
+
+        lse = HASH_busca_com_hash("./Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
+
+        TLSE* old = lse;
+        while(lse){
+
+            Champion* campeao = (Champion*)(lse->info);
+
+            TAtleta* atleta = TABM_busca("BMFiles/index.bin", campeao->chave);
+
+            if(atleta){
+
+            for (int j = 0; j < 34; j++)
+            {   
+                if(campeao->ano[j] == 0) break; 
+                if(atleta->rank == -1) {
+                    printf("\n\nAtleta %s furou o ranking em %d, quando foi campeão do Torneio %s\n", atleta->nome, campeao->ano[j], nomes_torneios[i]);
+                    teve_caso = 1;
+                }
+            }
+                     }
+            
+            lse = lse->prox;
+        }
+
+        free(old);
+
+}     
+
+    if(!teve_caso){
+        printf("\nNão existiram casos de furo de ranking para a opção escolhida.\n");
+    }
+
 }
 
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){

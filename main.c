@@ -16,7 +16,8 @@ int main(){
 
     // retira_pais();
 
-    maiores_campeoes_torneio();
+    // maiores_campeoes_torneio();
+    furou_ranking();
 
     // TAtleta* x = TABM_busca("BMFiles/index.bin", "Steeb");
 

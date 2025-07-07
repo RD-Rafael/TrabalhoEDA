@@ -478,7 +478,7 @@ void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offse
     {
         fseek(arq_hash, register_size*i, SEEK_SET);
         fread(aux, register_size, 1, arq_hash);
-        printf("%s", aux);
+        printf("%p", aux);
 
         int* aux_prox = (int*)((char*)aux + prox_offset);
         while (*aux_prox != INT_MIN && *aux_prox != -1 )
@@ -486,7 +486,7 @@ void HASH_print(char* nome_arq, int hash_size, int register_size, int prox_offse
             printf("-->");
             fseek(arq_hash, *aux_prox, SEEK_SET);
             fread(aux, register_size, 1, arq_hash);
-            printf("%s", aux);
+            printf("%p", aux);
         }
 
         printf("\n\n\n");

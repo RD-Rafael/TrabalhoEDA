@@ -15,6 +15,7 @@ void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta));
 void retira_pais();
 void nasceu_com_compatriota_campeão();
 void maiores_campeoes_torneio();
+void furou_ranking();
 
 
 #endif

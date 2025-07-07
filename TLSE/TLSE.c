@@ -29,7 +29,7 @@ TLSE* TLSE_insere_inicio(TLSE* lse, void* info) {
 
 void TLSE_print(TLSE* lse) {
     while (lse) {
-        printf("%s\n", lse->info);
+        printf("%p\n", lse->info);
         lse = lse->prox;
     }
 }
