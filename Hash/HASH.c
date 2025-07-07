@@ -220,14 +220,14 @@ void inicializa_arq_hash_vazio_generica(char* nome_arq_hash, int hash_size, int 
 
     fclose(arq_hash);
 
-    printf("Arquivo Hash vazio inicializado\n");
+    printf("Arquivo Hash vazio inicializado %s\n", nome_arq_hash);
 
 
 }
 
 void HASH_inserir_generica(char* nome_arq_hash, void* data, int prox_offset, int register_size,  int hash, int ord_func(void* a, void* b), int (*deal_with_same_input)(FILE* arq_hash, void* new_data, void* file_data)){
 
-
+    if(strcmp(nome_arq_hash, "Tabelas_Hash/Tabelas_Hash/hash_por_nacionalidade.hash")==0) printf("Opa\n\n");
     FILE* arq_hash = fopen(nome_arq_hash, "rb+");
 
 
@@ -333,6 +333,7 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
 
 
     int hash = hash_func(data);
+    // printf("\n\nhash %d\n\n", hash);
 
     void* aux = malloc(register_size);
 
@@ -343,6 +344,8 @@ TLSE* HASH_busca_generica(char* nome_arq_hash, void* data, int register_size, in
     lse = TLSE_insere_inicio(lse, aux);
 
     int* aux_prox = (int*)((char*)aux + prox_offset);
+
+    // printf("%d\n", *aux_prox);
 
     int offset = 0;
     while(*aux_prox != -1 && *aux_prox != INT_MIN ){
@@ -511,7 +514,7 @@ void substituir_traco(char* linha) {
     strcpy(linha, buffer);
 }
 
-void preenche_hash_por_ano(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+void preenche_hash_por_ano_teste(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
 
     const char* nomes_torneios[15] = {
     "Australian Open",
@@ -606,7 +609,7 @@ void preenche_hash_por_ano(char* nome_arq_dados, char* nome_arq_hash, int (*hash
 
 
 
-void cria_hash_campeoes_por_ano(char* caminho_arq_dados, char* caminho_dest_hash){
+void cria_hash_campeoes_por_ano_teste(char* caminho_arq_dados, char* caminho_dest_hash){
     ChampionsByYearTeste sentinela2 = { 
         .chave = "-", 
         .prox = INT_MIN 
@@ -617,7 +620,7 @@ void cria_hash_campeoes_por_ano(char* caminho_arq_dados, char* caminho_dest_hash
         sentinela2.pontos[i] = 0;
     }
 
-    HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 35, sizeof(ChampionsByYearTeste), &sentinela2, preenche_hash_por_ano, hash_ano, order);
+    HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 35, sizeof(ChampionsByYearTeste), &sentinela2, preenche_hash_por_ano_teste, hash_ano, order);
 }
 
 
@@ -720,4 +723,201 @@ void cria_hash_por_torneio(char* caminho_arq_dados, char* caminho_dest_hash){
     HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 15, sizeof(Champion), &sentinela2, preenche_hash_campeoes_por_torneio, hashing, order);
 }
 
+int deal_with_same_input_nacionalidade(FILE* arq_hash, void* new_data, void* file_data){
+    return 0;
+}
 
+void preenche_hash_nacionalidade(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+
+    FILE* arq_dados = fopen(nome_arq_dados, "r");
+
+    
+
+    TAtleta atleta;
+
+    int x = 0;
+
+
+    fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
+
+
+    char anoMorte_buffer[10];
+    char rank_buffer[10];
+    char anoRank_buffer[10];
+
+    char linha[300];
+
+    int i = 0;
+
+    while(fgets(linha, sizeof(linha)/sizeof(linha[0]),arq_dados ) != NULL){
+
+        int qtd_res = sscanf(linha, "%[^\\]\\%d\\%[^\\]\\%[^\\]\\%[^\\]\\%s (%d)",
+               atleta.nome,
+               &atleta.anoNascimento,
+               anoMorte_buffer,
+               atleta.nacionalidade,
+               rank_buffer,
+               anoRank_buffer,
+               &atleta.semanasTop1);
+
+
+        if(qtd_res == 6) atleta.semanasTop1 = -1;
+
+        int inicioSobrenome = 0;
+        int aux = -1;
+        for(int i = 0; i < 35; i++){
+            if(atleta.nome[i] == '\0') break;
+            else if(atleta.nome[i] == ' '){
+                aux = i;
+            } else{
+                inicioSobrenome = aux+1;
+            }
+        }
+
+        strcpy(atleta.chave, &atleta.nome[inicioSobrenome]);
+
+        // printf("%s\n", atleta.chave);
+
+
+        if(strcmp(anoMorte_buffer, "-") == 0) atleta.anoMorte = -1;
+        else atleta.anoMorte = atoi(anoMorte_buffer);
+
+        if(strcmp(rank_buffer, "-") == 0) atleta.rank = -1;
+        else atleta.rank = atoi(rank_buffer);
+
+        if(strcmp(anoRank_buffer, "-") == 0) atleta.anoMelhorRank = -1;
+        else atleta.anoMelhorRank = atoi(anoRank_buffer);
+
+        Data new;
+
+        strcpy(new.chave, atleta.chave);
+        new.prox = -1;
+
+        HASH_inserir_generica(nome_arq_hash, &new, offsetof(Data, prox), sizeof(Data), hash_func(&atleta), order, deal_with_same_input_nacionalidade);
+
+        i++;
+
+
+    }
+
+    printf("Qtd de atletas adicionados: %d\n", i);
+
+    fclose(arq_dados);
+}
+
+
+void cria_hash_nacionalidade(char* caminho_arq_dados, char* caminho_dest_hash){
+
+
+    Data sentinela;
+    strcpy(sentinela.chave, "-");
+    sentinela.prox = INT_MIN;
+
+     HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 52, sizeof(Data), &sentinela, preenche_hash_nacionalidade, hash_nacionalidade, order);
+}
+
+void preenche_hash_por_ano(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
+
+    const char* nomes_torneios[15] = {
+    "Australian Open",
+    "French Open", 
+    "Wimbledon",
+    "US Open",
+    "ATP Finals",
+    "Olympic games",
+    "Indian Wells",
+    "Miami",
+    "Monte Carlo",
+    "Madrid",
+    "Rome",
+    "Canada",
+    "Cincinnati",
+    "Shanghai",
+    "Paris"
+};
+
+    FILE* arq_dados = fopen(nome_arq_dados, "r");
+
+    
+
+    ChampionsByYear champions[15] = {0};
+
+    char linha[1000];
+
+    fscanf(arq_dados, "%*[^\n]\n"); //Pula primeira linha de descrição do arquivo
+
+    int ano;
+    int i = 0;
+
+    while (fgets(linha, sizeof(linha), arq_dados))
+    {   
+        substituir_traco(linha);
+        // printf("%s\n", linha);
+
+         int ok = sscanf(linha,
+            "%d"                      /* ano */
+            "\\%[^\\ (]%*[^\\]"      /* 0  Australian Open  */
+            "\\%[^\\ (]%*[^\\]"      /* 1  French Open      */
+            "\\%[^\\ (]%*[^\\]"      /* 2  Wimbledon        */
+            "\\%[^\\ (]%*[^\\]"      /* 3  US Open          */
+            "\\%[^\\ (]%*[^\\]"      /* 4  ATP Finals       */
+            "\\%[^\\ (]%*[^\\]"      /* 5  Olympic Games    */
+            "\\%[^\\ (]%*[^\\]"      /* 6  Indian Wells     */
+            "\\%[^\\ (]%*[^\\]"      /* 7  Miami            */
+            "\\%[^\\ (]%*[^\\]"      /* 8  Monte Carlo      */
+            "\\%[^\\ (]%*[^\\]"      /* 9  Madrid           */
+            "\\%[^\\ (]%*[^\\]"      /* 10 Rome            */
+            "\\%[^\\ (]%*[^\\]"      /* 11 Canada          */
+            "\\%[^\\ (]%*[^\\]"      /* 12 Cincinnati      */
+            "\\%[^\\ (]%*[^\\]"      /* 13 Shanghai        */
+            "\\%[^\\ (]%*[^\\]"      /* 14 Paris           */
+            , &ano,
+            champions[0].chave, champions[1].chave, champions[2].chave, champions[3].chave, champions[4].chave,
+            champions[5].chave, champions[6].chave, champions[7].chave, champions[8].chave, champions[9].chave,
+            champions[10].chave, champions[11].chave, champions[12].chave, champions[13].chave, champions[14].chave);
+
+        for (int i = 0; i < 15; i++)
+        {   
+            if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
+                strcpy(champions[i].torneio, nomes_torneios[i]);
+                champions[i].pontos = obter_pontuacao_torneio(i);
+                champions[i].prox = -1; 
+
+              
+                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(ChampionsByYear, prox), sizeof(ChampionsByYear), hash_func(&ano), ord_func, deal_with_same_input_nacionalidade);
+
+
+            }
+            
+        }
+
+        // break;
+
+        i++;
+
+        // if(i > 20) break;
+    }
+    
+    // HASH_print(nome_arq_hash, 15, sizeof(Champion), offsetof(Champion, prox));
+
+    // printf("%d e %d", sizeof(Champion), offsetof(Champion, prox));
+    
+
+    fclose(arq_dados);
+
+
+}
+
+void cria_hash_por_ano(char* caminho_arq_dados, char* caminho_dest_hash){
+
+    ChampionsByYear sentinela2 = { 
+        .chave = "-", 
+        .torneio = "-",          
+        .prox = INT_MIN 
+    };
+    
+
+
+    HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 35, sizeof(ChampionsByYear), &sentinela2, preenche_hash_por_ano, hash_ano, order);
+    
+}

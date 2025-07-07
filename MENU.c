@@ -430,7 +430,7 @@ void maiores_campeoes_torneio(){
     for (int i = 0; i < 15; i++)
     {
         printf("\n\n\n\nTorneio %s\n", nomes_torneios[i]);
-        lse = HASH_busca_com_hash("./Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
+        lse = HASH_busca_com_hash("./Tabelas_Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
 
 
         TLSE_ordena(lse, compara);
@@ -510,7 +510,7 @@ void furou_ranking(){
     {   
         
 
-        lse = HASH_busca_com_hash("./Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
+        lse = HASH_busca_com_hash("./Tabelas_Hash/hash_por_torneio.hash", sizeof(Champion), offsetof(Champion, prox) , i);
 
         TLSE* old = lse;
         while(lse){
@@ -559,11 +559,9 @@ void ranking_geral(){
     TLSE* output = TLSE_inicializa();
     TLSE* iter;
 
-
-
     for (int i = 1990; i <= 2024; i++)
     {   
-        lse = HASH_busca_generica("./Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
+        lse = HASH_busca_generica("./Tabelas_Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
 
         iter = lse;
         while(iter){
@@ -623,7 +621,7 @@ void pontuacao_obtida_por_ano(){
     for (int i = 1990; i <= 2024; i++)
     {   
         printf("\nAno de %d:\n", i);
-        lse = HASH_busca_generica("./Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
+        lse = HASH_busca_generica("./Tabelas_Hash/hash_campeoes_por_ano.hash", &i, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox), hash_ano);
 
         iter = lse;
         while(iter){
@@ -842,7 +840,7 @@ void ATP_final_por_ano(){
         }
 
         lse = NULL;
-        lse = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
+        lse = HASH_busca_com_hash("./Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
 
 
         iter = lse;
@@ -988,12 +986,17 @@ void nasceu_com_compatriota_campeao_new(){
     for (int i = 0; i < sizeof(nacionalidades_hash)/sizeof(nacionalidades_hash)[0]; i++){
 
         strcpy(temp.nacionalidade, nacionalidades_hash[i]);
-        TLSE* compatriotas = HASH_busca_generica("Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
+        TLSE* compatriotas = HASH_busca_generica("Tabelas_Hash/hash_por_nacionalidade.hash", &temp, 40, 36, hash_nacionalidade);
+        
+        // TLSE_print(compatriotas);
         TLSE* aux = compatriotas;
-
+        
         while(compatriotas){
             
             TAtleta*atleta  = TABM_busca("BMFiles/index.bin", compatriotas->info);
+
+            // printf("Ponteiro %p", atleta);
+
 
             if(atleta && atleta->anoNascimento >= 1990){
                 TLSE* vencedores_ano = HASH_busca_com_hash("Tabelas_Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), (atleta->anoNascimento-1990));

@@ -13,10 +13,13 @@ int compare_func(TAtleta* atleta){
 int main(){
     mkdir("BMFiles", 0777);
     TABM_inicializa("BMFiles/index.bin");
-    TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
+    TABM_leitura_arq("arquivos/tennis_players.txt", "BMFiles/index.bin");
 
-    cria_hash_campeoes_por_ano("arquivos/champions.txt", "Tabelas_Hash/TESTE.hash");
-    cria_hash_por_torneio("arquivos/champions.txt", "Tabelas_Hash/TESTE2.hash");
+    cria_hash_campeoes_por_ano_teste("arquivos/champions.txt", "Tabelas_Hash/hash_campeoes_por_ano_teste.hash");
+    cria_hash_por_ano("arquivos/champions.txt", "Tabelas_Hash/hash_campeoes_por_ano.hash");
+    cria_hash_por_torneio("arquivos/champions.txt", "Tabelas_Hash/hash_por_torneio.hash");
+    cria_hash_nacionalidade("arquivos/tennis_players.txt", "Tabelas_Hash/hash_por_nacionalidade.hash");
+
 
     // nasceu_com_compatriota_campeao_new();
     
