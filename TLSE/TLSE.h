@@ -16,7 +16,7 @@ void TLSE_print(TLSE* lse);
 int TLSE_conta(TLSE* l);
 void TLSE_free(TLSE* lse);
 void TLSE_print_maiores_campeoes(TLSE* lse);
-void TLSE_print_champion(TLSE* lse);
+void TLSE_print_teste(TLSE* lse);
 TLSE* TLSE_ordena(TLSE* lse, int (*compara)(void* a, void* b));
 TLSE* TLSE_insere_nao_duplicado(TLSE* lse, void* info);
 

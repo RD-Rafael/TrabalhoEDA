@@ -17,6 +17,13 @@ typedef struct championsbyyear{
     int prox;
 }ChampionsByYear;
 
+typedef struct championsbyyearteste{
+    char chave[35];
+    char torneio[15][35];
+    int pontos[15];
+    int prox;
+}ChampionsByYearTeste;
+
 
 void HASH_inicializa(char* nome_arq_dados, char* nome_arq_hash, int hash_size, int hash_func(void* chave), int ord_func(void* a, void* b));
 

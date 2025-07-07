@@ -14,14 +14,14 @@ int main(){
     TABM_inicializa("BMFiles/index.bin");
     TABM_leitura_arq("tennis_players.txt", "BMFiles/index.bin");
 
-    
+    grand_slams_mesmo_ano();
     
     //TABM_destruir_arq("tennis_players.txt", "BMFiles/index.bin");
     //printf("%d\n", TABM_no_count("BMFiles/index.bin"));
 
-    while(1){
-        MENU_selecionaAcao();
-    }
+    // while(1){
+    //     MENU_selecionaAcao();
+    // }
  
 
     return 0;

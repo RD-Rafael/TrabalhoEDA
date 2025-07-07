@@ -585,8 +585,6 @@ void ranking_geral(){
     
 }
 
-
-
 void pontuacao_obtida_por_ano(){
 
     TLSE* lse = TLSE_inicializa();
@@ -648,6 +646,72 @@ void pontuacao_obtida_por_ano(){
 
     TLSE_free(lse);
     
+}
+
+void grand_slams_mesmo_ano(){
+
+    TLSE* lse = TLSE_inicializa();
+    TLSE* output = TLSE_inicializa();
+    TLSE* iter;
+
+    const char* grand_slams[4] = {
+    "Australian Open",
+    "French Open", 
+    "Wimbledon",
+    "US Open",
+};
+
+    int ganhou_tudo = 1;
+    int alguem_ganhou = 0;
+
+
+    for (int i = 0; i <= 34; i++)
+    {   
+        lse = HASH_busca_com_hash("./Hash/hash_campeoes_por_ano_teste.hash", sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox), i);
+
+        iter = lse;
+
+        
+
+        while(iter){
+
+            ChampionsByYearTeste* champion = ((ChampionsByYearTeste*)(iter->info));
+
+            ganhou_tudo = 1;
+            
+            for (int i = 0; i < 4; i++)
+            {
+                if(strcpy(champion->torneio[i], grand_slams[i]) != 0){
+                    ganhou_tudo = 0;
+                    break;
+                }
+            }
+
+            if(ganhou_tudo){
+                alguem_ganhou = 1;
+                printf("O %s ganhou fou tudo esse ano: ", champion->chave);
+
+                for (int i = 0; (champion->pontos[i] != 0 && i<15); i++)
+                {
+                    printf("- %s ", ((ChampionsByYearTeste*)lse->info)->torneio[i]);
+                    // printf("%d - ", ((ChampionsByYearTeste*)lse->info)->pontos[i]);
+                }
+                
+                
+                printf("\n\n");
+            }
+            
+            iter = iter->prox;
+        }
+
+        // TLSE_print_teste(lse);
+        // printf("\n\n\n");
+
+
+    }
+
+    if(!alguem_ganhou) printf("\nNinguém ganhou todos os grand slams no mesmo ano(True Golden Slam) no período entre 1990 e 2024\n");
+
 }
 
 void table_scan(char* nome_arq_dados, int compare_func(TAtleta* atleta)){

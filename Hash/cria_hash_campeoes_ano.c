@@ -44,7 +44,25 @@ int order(void * a, void* b){
 }
 
 int deal_with_same_input(FILE* arq_hash, void* new_data, void* file_data){
-    return 0; //Passa sempre, não tem problema nesse caso 
+
+    ChampionsByYearTeste* new = (ChampionsByYearTeste*)new_data;
+    ChampionsByYearTeste* old = (ChampionsByYearTeste*)file_data;
+
+    for (int i = 0; i < 15; i++)
+    {
+        if(old->pontos[i] == 0){
+            old->pontos[i] = new->pontos[0];
+            strcpy(old->torneio[i], new->torneio[0]);
+            break;
+        }
+    }
+    
+
+    long current_pos = ftell(arq_hash);
+    fseek(arq_hash, current_pos - sizeof(ChampionsByYearTeste), SEEK_SET);
+    fwrite(old, sizeof(ChampionsByYearTeste), 1, arq_hash);
+    
+    return 1; 
 }
 
 
@@ -100,7 +118,7 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
 
     
 
-    ChampionsByYear champions[15] = {0};
+    ChampionsByYearTeste champions[15] = {0};
 
     char linha[1000];
 
@@ -138,12 +156,12 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
         for (int i = 0; i < 15; i++)
         {   
             if(strcmp(champions[i].chave, "INEXISTENTE") != 0){
-                strcpy(champions[i].torneio, nomes_torneios[i]);
-                champions[i].pontos = obter_pontuacao_torneio(i);
+                strcpy(champions[i].torneio[0], nomes_torneios[i]);
+                champions[i].pontos[0] = obter_pontuacao_torneio(i);
                 champions[i].prox = -1; 
 
               
-                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(ChampionsByYear, prox), sizeof(ChampionsByYear), hash_func(ano), ord_func, deal_with_same_input);
+                HASH_inserir_generica(nome_arq_hash, &champions[i], offsetof(ChampionsByYearTeste, prox), sizeof(ChampionsByYearTeste), hash_func(&ano), ord_func, deal_with_same_input);
 
 
             }
@@ -164,7 +182,7 @@ void preenche_hash(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(v
 
 int main(){
 
-    ChampionsByYear sentinela2 = { 
+    ChampionsByYearTeste sentinela2 = { 
         .chave = "-", 
         .torneio = "-",          
         .prox = INT_MIN 
@@ -172,9 +190,13 @@ int main(){
     
 
 
-    HASH_inicializa_generica("../arquivos/champions.txt", "hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), &sentinela2, preenche_hash, hash_ano, order);
+    // HASH_inicializa_generica("../arquivos/champions.txt", "hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), &sentinela2, preenche_hash, hash_ano, order);
 
-    HASH_print("hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox));
+    // HASH_print("hash_campeoes_por_ano.hash", 35, sizeof(ChampionsByYear), offsetof(ChampionsByYear, prox));
+
+    HASH_inicializa_generica("../arquivos/champions.txt", "hash_campeoes_por_ano_teste.hash", 35, sizeof(ChampionsByYearTeste), &sentinela2, preenche_hash, hash_ano, order);
+
+    HASH_print("hash_campeoes_por_ano_teste.hash", 35, sizeof(ChampionsByYearTeste), offsetof(ChampionsByYearTeste, prox));
     
 
     return 0;
