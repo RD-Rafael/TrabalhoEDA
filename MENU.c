@@ -250,11 +250,13 @@ void MENU_remover_atleta(){
 
 void retira_pais(){
 
-    char pais[40];
-
-
+    char* pais;
+    int paisI;
     printf("Deseja remover os atletas de qual nacionalidade da base de dados?\n");
-    scanf("%s", pais);
+    listaNacionalidades();
+    scanf("%d", &paisI);
+
+    pais = getNacionalidade(paisI);
 
     TAtleta atleta_temp;
     strcpy(atleta_temp.nacionalidade, pais);

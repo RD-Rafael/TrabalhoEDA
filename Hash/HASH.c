@@ -760,7 +760,6 @@ void preenche_hash_nacionalidade(char* nome_arq_dados, char* nome_arq_hash, int 
                anoRank_buffer,
                &atleta.semanasTop1);
 
-
         if(qtd_res == 6) atleta.semanasTop1 = -1;
 
         int inicioSobrenome = 0;
@@ -789,6 +788,7 @@ void preenche_hash_nacionalidade(char* nome_arq_dados, char* nome_arq_hash, int 
         else atleta.anoMelhorRank = atoi(anoRank_buffer);
 
         Data new;
+        memset(&new, 0, sizeof(Data));
 
         strcpy(new.chave, atleta.chave);
         new.prox = -1;
@@ -810,10 +810,12 @@ void cria_hash_nacionalidade(char* caminho_arq_dados, char* caminho_dest_hash){
 
 
     Data sentinela;
+    memset(&sentinela, 0, sizeof(Data));
+
     strcpy(sentinela.chave, "-");
     sentinela.prox = INT_MIN;
 
-     HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 52, sizeof(Data), &sentinela, preenche_hash_nacionalidade, hash_nacionalidade, order);
+    HASH_inicializa_generica(caminho_arq_dados, caminho_dest_hash, 52, sizeof(Data), &sentinela, preenche_hash_nacionalidade, hash_nacionalidade, order);
 }
 
 void preenche_hash_por_ano(char* nome_arq_dados, char* nome_arq_hash, int (*hash_func)(void* chave), int (*ord_func)(void* a, void* b)){
