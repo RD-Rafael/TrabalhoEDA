@@ -169,7 +169,7 @@ void HASH_remove_global(void* data){
 
 
     Hash tabelas_sistema[] = {
-    {"Hash/hash_por_nacionalidade.hash", hash_nacionalidade, 40, 36},
+    {"Tabelas_Hash/hash_por_nacionalidade.hash", hash_nacionalidade, 40, 36},
     // {"Hash/hash_por_torneio.hash", hash_torneio, 44, 40}, Retirar daqui faz sentido?
 
     };
